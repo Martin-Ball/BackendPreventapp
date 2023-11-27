@@ -36,6 +36,11 @@ const login = async(req, res = response) => {
         const userGroup = await UsuarioGrupo.findOne({
             where: { idUsuario: user.idUsuario },
         });
+
+        const groupType = await Grupo.findOne({
+            where: { idGrupo: userGroup.idGrupo },
+        });
+        
         
         console.log(`UsuarioGrupo: ${userGroup.idGrupo }, ${user.idUsuario}`)
 
@@ -65,6 +70,7 @@ const login = async(req, res = response) => {
 
         res.json({
             user,
+            groupType,
             permissions,
             token
         });

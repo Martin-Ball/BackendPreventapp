@@ -12,7 +12,7 @@ router.post('/login', [
     validarCampos
 ], login)  
 
-router.get('/renewToken', validarJWT, renewToken);
+router.get('/renewToken', renewToken);
 
 router.post('/register', [
     check('username', 'El correo es obligatorio').isEmail(),
