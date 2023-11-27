@@ -120,7 +120,10 @@ const register = async (req, res = response) => {
             GrupoId: group.idGrupo,
         });
 
-        const token = await generarJWT(newUser.idUsuario);
+        await UsuarioGrupo.create({
+            idUsuario: newUser.idUsuario,
+            idGrupo: group.idGrupo,
+          });
 
         const permissionsForGroup = await Permiso.findAll({
             attributes: ['idPermiso', 'nombrePermiso'],
@@ -142,6 +145,8 @@ const register = async (req, res = response) => {
         }));
 
         await UsuarioPermiso.bulkCreate(userPermissions);
+
+        const token = await generarJWT(newUser.idUsuario);
 
         res.json({
             newUser,
