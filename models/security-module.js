@@ -7,12 +7,15 @@ const Usuario = db.define('Usuario', {
         primaryKey: true,
         autoIncrement: true,
     },
-    nombre_usuario: {
+    nombreUsuario: {
         type: DataTypes.STRING,
     },
     contrasena: {
         type: DataTypes.STRING,
     },
+    estado: {
+        type: DataTypes.INTEGER
+    }
 }, {
     tableName: 'Usuario',
     timestamps: false,
@@ -25,9 +28,12 @@ const Grupo = db.define('Grupo', {
         primaryKey: true,
         autoIncrement: true,
     },
-    nombre_grupo: {
+    nombreGrupo: {
         type: DataTypes.STRING,
     },
+}, {
+    tableName: 'Grupo',
+    timestamps: false,
 });
 
 // Modelo Permiso
@@ -37,9 +43,12 @@ const Permiso = db.define('Permiso', {
         primaryKey: true,
         autoIncrement: true,
     },
-    nombre_permiso: {
+    nombrePermiso: {
         type: DataTypes.STRING,
     },
+}, {
+    tableName: 'Permiso',
+    timestamps: false,
 });
 
 const UsuarioGrupo = db.define('UsuarioGrupo', {}, { timestamps: false });

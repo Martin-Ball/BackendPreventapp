@@ -1,6 +1,7 @@
 const { response, request } = require('express')
 const jwt = require('jsonwebtoken')
-const Usuario = require('../models/usuario')
+const { Usuario } = require('../models/security-module');
+
 
 const validarJWT = async(req = request, res = response, next) => {
 
@@ -15,7 +16,8 @@ const validarJWT = async(req = request, res = response, next) => {
     try {
         //verifica el jwt
         const {uid} = jwt.verify( token, process.env.SECRETORPRIVATEKEY)
-        const usuario = await Usuario.findById(uid)
+        const usuario = await Usuario.findOne({ where: { idUsuario: uid } });
+        console.log(usuario)
 
         if(!usuario){
             return res.status(401).json({
@@ -24,7 +26,7 @@ const validarJWT = async(req = request, res = response, next) => {
         }
 
         //Verificar si el uid tiene estado en true
-        if(!usuario.estado){
+        if(usuario.estado == 0){
             return res.status(401).json({
                 msg:'Token no valido - usuario con estado: false'
             })
