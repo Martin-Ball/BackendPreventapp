@@ -51,22 +51,22 @@ const Permiso = db.define('Permiso', {
     timestamps: false,
 });
 
-const UsuarioGrupo = db.define('UsuarioGrupo', {}, { timestamps: false });
+const UsuarioGrupo = db.define('UsuarioGrupo', {}, { tableName: 'UsuarioGrupo', timestamps: false });
 
 Usuario.belongsToMany(Grupo, { through: UsuarioGrupo, foreignKey: 'idUsuario' });
 Grupo.belongsToMany(Usuario, { through: UsuarioGrupo, foreignKey: 'idGrupo' });
 
-const UsuarioPermiso = db.define('UsuarioPermiso', {}, { timestamps: false });
+const UsuarioPermiso = db.define('UsuarioPermiso', {}, { tableName: 'UsuarioPermiso', timestamps: false });
 
 Usuario.belongsToMany(Permiso, { through: UsuarioPermiso, foreignKey: 'idUsuario' });
 Permiso.belongsToMany(Usuario, { through: UsuarioPermiso, foreignKey: 'idPermiso' });
 
-const GrupoPermiso = db.define('GrupoPermiso', {}, { timestamps: false });
+const GrupoPermiso = db.define('GrupoPermiso', {}, { tableName: 'GrupoPermiso', timestamps: false });
 
 Grupo.belongsToMany(Permiso, { through: GrupoPermiso, foreignKey: 'idGrupo' });
 Permiso.belongsToMany(Grupo, { through: GrupoPermiso, foreignKey: 'idPermiso' });
 
-const GrupoGrupo = db.define('GrupoGrupo', {}, { timestamps: false });
+const GrupoGrupo = db.define('GrupoGrupo', {}, { tableName: 'GrupoGrupo', timestamps: false });
 
 Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoPadre', foreignKey: 'idGrupoPadre' });
 Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoHijo', foreignKey: 'idGrupoHijo' });

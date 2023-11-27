@@ -1,7 +1,7 @@
 const { response, json } = require("express");
 const bcryptjs = require('bcryptjs');
 const { generarJWT } = require("../helpers/generar-jwt");
-const { Usuario, Grupo } = require('../models/security-module');
+const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo } = require('../models/security-module');
 const {db} = require("../database/connection")
 
 const login = async(req, res = response) => {
@@ -10,34 +10,62 @@ const login = async(req, res = response) => {
 
     try {
 
-        const usuario = await Usuario.findOne({ where: { nombreUsuario: username } });
+        const user = await Usuario.findOne({ where: { nombreUsuario: username } });
 
-        if (!usuario) {
+        if (!user) {
             return res.status(400).json({
                 msg: 'Usuario/Password no son correctos - nombre_usuario'
             });
         }
 
         // Verificar si el usuario está activo
-        if (usuario.estado == 0) {
+        if (user.estado == 0) {
             return res.status(400).json({
                 msg: 'Usuario/Password no son correctos - estado false'
             });
         }
 
         // Verificar la contraseña comparando la ingresada con la del usuario
-        const validPassword = bcryptjs.compareSync(password, usuario.contrasena);
+        const validPassword = bcryptjs.compareSync(password, user.contrasena);
         if (!validPassword) {
             return res.status(400).json({
                 msg: 'Usuario/Password no son correctos - password'
             });
         }
 
+        const userGroup = await UsuarioGrupo.findOne({
+            where: { idUsuario: user.idUsuario },
+        });
+        
+        console.log(`UsuarioGrupo: ${userGroup.idGrupo }, ${user.idUsuario}`)
+
+
+        if (userGroup == null) {
+            return res.status(400).json({
+                msg: 'Usuario no tiene entradas en UsuarioGrupo',
+            });
+        }
+
+        const permissions = await Permiso.findAll({
+            attributes: ['idPermiso', 'nombrePermiso'],
+            include: [
+                {
+                    model: Grupo,
+                    through: {
+                        model: GrupoPermiso,
+                        where: { idGrupo: userGroup.idGrupo },
+                    },
+                    attributes: [],
+                },
+            ],
+        });
+
         // Generar el JWT
-        const token = await generarJWT(usuario.idUsuario);
+        const token = await generarJWT(user.idUsuario);
 
         res.json({
-            usuario,
+            user,
+            permissions,
             token
         });
 
@@ -89,8 +117,6 @@ const register =  async(req, res = response) => {
         const salt = bcryptjs.genSaltSync()
         passwordEncrypt = bcryptjs.hashSync( password, salt )
 
-        console.log(passwordEncrypt)
-
         const newUser = await Usuario.create({
             nombreUsuario: username,
             contrasena: passwordEncrypt,
@@ -98,13 +124,25 @@ const register =  async(req, res = response) => {
             GrupoId: group.idGrupo
         });
 
-        console.log('Usuario registrado:', newUser);
-
-        // Generar el JWT
         const token = await generarJWT(newUser.idUsuario);
+
+        const permission = await Permiso.findAll({
+            attributes: ['idPermiso', 'nombrePermiso'],
+            include: [
+              {
+                model: Grupo,
+                through: {
+                  model: GrupoPermiso,
+                  where: { idGrupo: group.idGrupo },
+                },
+                attributes: [],
+              },
+            ],
+        });
 
         res.json({
             newUser,
+            permission,
             token
         });
 
