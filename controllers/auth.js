@@ -1,5 +1,6 @@
 const { response, json } = require("express");
 const bcryptjs = require('bcryptjs');
+const jwt = require('jsonwebtoken')
 const { generarJWT } = require("../helpers/generar-jwt");
 const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso } = require('../models/security-module');
 
@@ -77,12 +78,44 @@ const login = async(req, res = response) => {
 };
 
 const renewToken = async (req, res = response) => {
-    const { uid } = req;
+    const token = req.header('x-token')
   
-    const token = await generarJWT(uid);
+    try {
+      const esTokenValido = await validarToken(token);
 
-    res.json({
-        token
+      console.log(esTokenValido)
+  
+      if (!esTokenValido) {
+        return res.json({
+          valid: false,
+        });
+      }
+      
+      console.log(`uid de x-token: ${req.uid}`)
+      const newToken = await generarJWT(req.uid);
+  
+      res.json({
+        valid: true,
+        token: newToken,
+      });
+    } catch (error) {
+      console.error('Error al renovar el token:', error);
+      return res.status(500).json({
+        msg: 'Error al renovar el token',
+      });
+    }
+};
+
+const validarToken = async (token) => {
+    return new Promise((resolve, reject) => {
+      jwt.verify(token, process.env.SECRETORPRIVATEKEY, (err, decoded) => {
+        if (err) {
+          console.log(`error: ${err}`)
+          resolve(false);
+        } else {
+          resolve(true);
+        }
+      });
     });
 };
 
