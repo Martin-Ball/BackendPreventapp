@@ -1,8 +1,7 @@
 const { response, json } = require("express");
 const bcryptjs = require('bcryptjs');
 const { generarJWT } = require("../helpers/generar-jwt");
-const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo } = require('../models/security-module');
-const {db} = require("../database/connection")
+const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso } = require('../models/security-module');
 
 const login = async(req, res = response) => {
 
@@ -87,70 +86,73 @@ const renewToken = async (req, res = response) => {
     });
 };
 
-const register =  async(req, res = response) => {
+const register = async (req, res = response) => {
     try {
-
-        const { username, password, type } = req.body
+        const { username, password, type } = req.body;
 
         const usuario = await Usuario.findOne({ where: { nombreUsuario: username } });
 
-        console.log(`usuario encontrado: ${usuario}`)
-
-        if(usuario != null){
+        if (usuario !== null) {
             return res.status(400).json({
-                msg: 'Usuario ya registrado'
+                msg: 'Usuario ya registrado',
             });
         }
 
         const group = await Grupo.findOne({
             where: {
-                nombreGrupo: type
-            }
+                nombreGrupo: type,
+            },
         });
 
         if (!group) {
             return res.status(400).json({
-                msg: 'Grupo no encontrado'
+                msg: 'Grupo no encontrado',
             });
         }
 
-        const salt = bcryptjs.genSaltSync()
-        passwordEncrypt = bcryptjs.hashSync( password, salt )
+        const salt = bcryptjs.genSaltSync();
+        const passwordEncrypt = bcryptjs.hashSync(password, salt);
 
         const newUser = await Usuario.create({
             nombreUsuario: username,
             contrasena: passwordEncrypt,
             estado: 1,
-            GrupoId: group.idGrupo
+            GrupoId: group.idGrupo,
         });
 
         const token = await generarJWT(newUser.idUsuario);
 
-        const permission = await Permiso.findAll({
+        const permissionsForGroup = await Permiso.findAll({
             attributes: ['idPermiso', 'nombrePermiso'],
             include: [
-              {
-                model: Grupo,
-                through: {
-                  model: GrupoPermiso,
-                  where: { idGrupo: group.idGrupo },
+                {
+                    model: Grupo,
+                    through: {
+                        model: GrupoPermiso,
+                        where: { idGrupo: group.idGrupo },
+                    },
+                    attributes: [],
                 },
-                attributes: [],
-              },
             ],
         });
 
+        const userPermissions = permissionsForGroup.map((permiso) => ({
+            idUsuario: newUser.idUsuario,
+            idPermiso: permiso.idPermiso,
+        }));
+
+        await UsuarioPermiso.bulkCreate(userPermissions);
+
         res.json({
             newUser,
-            permission,
-            token
+            permissionsForGroup,
+            token,
         });
-
     } catch (error) {
         console.error('Error al registrar el usuario:', error);
         return res.status(500).json({
-            msg: error
-        });   
+            msg: error,
+        });
     }
 };
 
