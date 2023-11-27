@@ -1,0 +1,81 @@
+const { Sequelize, DataTypes } = require('sequelize');
+const { db } = require('../database/connection')
+
+const Usuario = db.define('Usuario', {
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    nombre_usuario: {
+        type: DataTypes.STRING,
+    },
+    contrasena: {
+        type: DataTypes.STRING,
+    },
+}, {
+    tableName: 'Usuario',
+    timestamps: false,
+});
+
+// Modelo Grupo
+const Grupo = db.define('Grupo', {
+    idGrupo: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    nombre_grupo: {
+        type: DataTypes.STRING,
+    },
+});
+
+// Modelo Permiso
+const Permiso = db.define('Permiso', {
+    idPermiso: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    nombre_permiso: {
+        type: DataTypes.STRING,
+    },
+});
+
+const UsuarioGrupo = db.define('UsuarioGrupo', {}, { timestamps: false });
+
+Usuario.belongsToMany(Grupo, { through: UsuarioGrupo, foreignKey: 'idUsuario' });
+Grupo.belongsToMany(Usuario, { through: UsuarioGrupo, foreignKey: 'idGrupo' });
+
+const UsuarioPermiso = db.define('UsuarioPermiso', {}, { timestamps: false });
+
+Usuario.belongsToMany(Permiso, { through: UsuarioPermiso, foreignKey: 'idUsuario' });
+Permiso.belongsToMany(Usuario, { through: UsuarioPermiso, foreignKey: 'idPermiso' });
+
+const GrupoPermiso = db.define('GrupoPermiso', {}, { timestamps: false });
+
+Grupo.belongsToMany(Permiso, { through: GrupoPermiso, foreignKey: 'idGrupo' });
+Permiso.belongsToMany(Grupo, { through: GrupoPermiso, foreignKey: 'idPermiso' });
+
+const GrupoGrupo = db.define('GrupoGrupo', {}, { timestamps: false });
+
+Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoPadre', foreignKey: 'idGrupoPadre' });
+Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoHijo', foreignKey: 'idGrupoHijo' });
+
+db.sync()
+    .then(() => {
+        console.log('Modelos sincronizados con la base de datos.');
+    })
+    .catch((error) => {
+        console.error('Error al sincronizar modelos con la base de datos:', error);
+    });
+
+module.exports = {
+    Usuario,
+    Grupo,
+    Permiso,
+    UsuarioGrupo,
+    UsuarioPermiso,
+    GrupoPermiso,
+    GrupoGrupo,
+};
