@@ -53,8 +53,8 @@ const Permiso = db.define('Permiso', {
 
 const UsuarioGrupo = db.define('UsuarioGrupo', {}, { tableName: 'UsuarioGrupo', timestamps: false });
 
-Usuario.belongsToMany(Grupo, { through: UsuarioGrupo, foreignKey: 'idUsuario' });
-Grupo.belongsToMany(Usuario, { through: UsuarioGrupo, foreignKey: 'idGrupo' });
+Usuario.belongsToMany(Grupo, { through: UsuarioGrupo, foreignKey: 'idUsuario', as: 'Grupos' });
+Grupo.belongsToMany(Usuario, { through: UsuarioGrupo, foreignKey: 'idGrupo', as: 'Usuarios' });
 
 const UsuarioPermiso = db.define('UsuarioPermiso', {}, { tableName: 'UsuarioPermiso', timestamps: false });
 
@@ -71,6 +71,32 @@ const GrupoGrupo = db.define('GrupoGrupo', {}, { tableName: 'GrupoGrupo', timest
 Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoPadre', foreignKey: 'idGrupoPadre' });
 Grupo.belongsToMany(Grupo, { through: GrupoGrupo, as: 'GrupoHijo', foreignKey: 'idGrupoHijo' });
 
+const UsuarioAdmin = db.define('UsuarioAdmin', {
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+    idAdmin: {
+        type: DataTypes.INTEGER,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+}, {
+    tableName: 'UsuarioAdmin',
+    timestamps: false,
+});
+
+Usuario.belongsToMany(Usuario, { through: UsuarioAdmin, foreignKey: 'idAdmin', as: 'Admin' });
+Usuario.belongsToMany(Usuario, { through: UsuarioAdmin, foreignKey: 'idUsuario', as: 'Usuario' });
+
+
+
 db.sync()
     .then(() => {
         console.log('Modelos sincronizados con la base de datos.');
@@ -85,6 +111,7 @@ module.exports = {
     Permiso,
     UsuarioGrupo,
     UsuarioPermiso,
+    UsuarioAdmin,
     GrupoPermiso,
     GrupoGrupo,
 };

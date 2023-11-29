@@ -2,7 +2,7 @@ const { response, json } = require("express");
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const { generarJWT } = require("../helpers/generar-jwt");
-const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso } = require('../models/security-module');
+const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso , UsuarioAdmin } = require('../models/security-module');
 
 const login = async(req, res = response) => {
 
@@ -127,12 +127,12 @@ const validarToken = async (token) => {
 
 const register = async (req, res = response) => {
     try {
-        const { username, password, type } = req.body;
+        const { username, password, type, usernameAdmin } = req.body;
 
         const usuario = await Usuario.findOne({ where: { nombreUsuario: username } });
 
         if (usuario !== null) {
-            return res.status(400).json({
+            return res.status(400).send({
                 msg: 'Usuario ya registrado',
             });
         }
@@ -144,7 +144,7 @@ const register = async (req, res = response) => {
         });
 
         if (!group) {
-            return res.status(400).json({
+            return res.status(400).send({
                 msg: 'Grupo no encontrado',
             });
         }
@@ -163,6 +163,15 @@ const register = async (req, res = response) => {
             idUsuario: newUser.idUsuario,
             idGrupo: group.idGrupo,
           });
+        
+        if(usernameAdmin != ""){
+            const {idUsuario} = await Usuario.findOne({ where: { nombreUsuario: usernameAdmin } });
+
+            await UsuarioAdmin.create({
+                idUsuario: newUser.idUsuario,
+                idAdmin: idUsuario,
+            });
+        }
 
         const permissionsForGroup = await Permiso.findAll({
             attributes: ['idPermiso', 'nombrePermiso'],
@@ -189,12 +198,13 @@ const register = async (req, res = response) => {
 
         res.json({
             newUser,
+            group,
             permissionsForGroup,
             token,
         });
     } catch (error) {
         console.error('Error al registrar el usuario:', error);
-        return res.status(500).json({
+        return res.status(500).send({
             msg: error,
         });
     }
