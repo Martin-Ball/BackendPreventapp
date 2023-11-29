@@ -1,6 +1,8 @@
 const { response, json } = require("express");
 const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso, UsuarioAdmin } = require('../models/security-module');
 const jwt = require('jsonwebtoken')
+const { db } = require('../database/connection')
+const { Sequelize} = require('sequelize');
 
 const getPermissionsByUser = async (req, res = response) => {
     try {
@@ -77,28 +79,32 @@ const getUsers = async (req, res) => {
             });
         }
 
-        const usersIds = await UsuarioAdmin.findAll({
-            where: { idAdmin: admin.idUsuario },
+       
+        const usersDetails = await db.query(`
+            SELECT Usuario.idUsuario, Usuario.nombreUsuario, Usuario.contrasena, Usuario.estado, Grupo.nombreGrupo
+            FROM UsuarioAdmin
+            JOIN Usuario ON UsuarioAdmin.idUsuario = Usuario.idUsuario
+            JOIN UsuarioGrupo ON Usuario.idUsuario = UsuarioGrupo.idUsuario
+            JOIN Grupo ON UsuarioGrupo.idGrupo = Grupo.idGrupo
+            WHERE UsuarioAdmin.idAdmin = :idAdmin
+        `, {
+            replacements: { idAdmin: admin.idUsuario },
+            type: Sequelize.QueryTypes.SELECT,
         });
-        
-        const usersDetails = await Usuario.findAll({
-            where: { idUsuario: usersIds.map(user => user.idUsuario) },
-            attributes: ['idUsuario', 'nombreUsuario', 'contrasena', 'estado'],
-            include: [
-                {
-                    model: UsuarioGrupo,
-                    as: 'UsuarioGrupos',
-                    include: [
-                        {
-                            model: Grupo,
-                            as: 'Grupo',
-                            attributes: ['nombreGrupo'],
-                        },
-                    ],
-                },
-            
-            ],
-        });
+
+        for (const user of usersDetails) {
+            const userPermissions = await db.query(`
+                SELECT Permiso.nombrePermiso
+                FROM UsuarioPermiso
+                JOIN Permiso ON UsuarioPermiso.idPermiso = Permiso.idPermiso
+                WHERE UsuarioPermiso.idUsuario = :idUsuario
+            `, {
+                replacements: { idUsuario: user.idUsuario },
+                type: Sequelize.QueryTypes.SELECT,
+            });
+
+            user.permisos = userPermissions.map(permiso => permiso.nombrePermiso);
+        }
 
         res.json({
             msg: 'Usuarios obtenidos correctamente',
@@ -111,6 +117,7 @@ const getUsers = async (req, res) => {
         });
     }
 };
+
 
 module.exports = {
     getPermissionsByUser,

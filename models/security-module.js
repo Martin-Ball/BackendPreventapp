@@ -53,8 +53,12 @@ const Permiso = db.define('Permiso', {
 
 const UsuarioGrupo = db.define('UsuarioGrupo', {}, { tableName: 'UsuarioGrupo', timestamps: false });
 
-Usuario.belongsToMany(Grupo, { through: UsuarioGrupo, foreignKey: 'idUsuario', as: 'Grupos' });
-Grupo.belongsToMany(Usuario, { through: UsuarioGrupo, foreignKey: 'idGrupo', as: 'Usuarios' });
+
+Usuario.belongsToMany(UsuarioGrupo, { through: 'GrupoPermiso',  foreignKey: 'idUsuario' });
+UsuarioGrupo.belongsToMany(Usuario, {  through: 'GrupoPermiso', foreignKey: 'idUsuario' });
+Grupo.belongsToMany(UsuarioGrupo, { through: 'GrupoPermiso', foreignKey: 'idGrupo' });
+UsuarioGrupo.belongsToMany(Grupo, { through: 'GrupoPermiso', foreignKey: 'idGrupo' });
+
 
 const UsuarioPermiso = db.define('UsuarioPermiso', {}, { tableName: 'UsuarioPermiso', timestamps: false });
 
