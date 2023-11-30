@@ -68,7 +68,7 @@ const getPermissionsByUser = async (req, res = response) => {
 
 const getUsers = async (req, res) => {
     try {
-        const { username } = req.body;
+        const { username } = req.query;
 
         // Buscar el usuario administrador por su nombre de usuario
         const admin = await Usuario.findOne({ where: { nombreUsuario: username } });
@@ -79,7 +79,6 @@ const getUsers = async (req, res) => {
             });
         }
 
-       
         const usersDetails = await db.query(`
             SELECT Usuario.idUsuario, Usuario.nombreUsuario, Usuario.contrasena, Usuario.estado, Grupo.nombreGrupo
             FROM UsuarioAdmin
@@ -94,20 +93,22 @@ const getUsers = async (req, res) => {
 
         for (const user of usersDetails) {
             const userPermissions = await db.query(`
-                SELECT Permiso.nombrePermiso
+                SELECT Permiso.nombrePermiso, UsuarioPermiso.estado
                 FROM UsuarioPermiso
                 JOIN Permiso ON UsuarioPermiso.idPermiso = Permiso.idPermiso
                 WHERE UsuarioPermiso.idUsuario = :idUsuario
             `, {
-                replacements: { idUsuario: user.idUsuario },
+                replacements: { idUsuario: user.idUsuario, estado: user.estado },
                 type: Sequelize.QueryTypes.SELECT,
             });
 
-            user.permisos = userPermissions.map(permiso => permiso.nombrePermiso);
+            user.permisos = userPermissions.map(permiso => ({
+                nombrePermiso: permiso.nombrePermiso,
+                estado: permiso.estado
+            }));
         }
 
         res.json({
-            msg: 'Usuarios obtenidos correctamente',
             usuarios: usersDetails,
         });
     } catch (error) {
