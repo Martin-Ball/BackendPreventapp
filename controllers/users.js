@@ -3,6 +3,7 @@ const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso, Usu
 const jwt = require('jsonwebtoken')
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
+const bcryptjs = require('bcryptjs');
 
 const getPermissionsByUser = async (req, res = response) => {
     try {
@@ -119,8 +120,136 @@ const getUsers = async (req, res) => {
     }
 };
 
+const updatePermissionsState = async (req, res) => {
+    const {username, permissions} = req.body
+
+    const user = await Usuario.findOne({
+        where: { nombreUsuario: username }
+    });
+
+    if (!user) {
+        return res.status(404).json({
+            msg: `Usuario ${username} no encontrado`
+        });
+    }
+
+    try {
+        for (const updatePermission of permissions) {
+            const { nombrePermiso, estado } = updatePermission;
+
+            const permission = await Permiso.findOne({
+                where: { nombrePermiso: nombrePermiso }
+            });
+
+            if (!permission) {
+                return res.status(404).json({
+                    msg: `Permiso ${nombrePermiso} no encontrado`
+                });
+            }
+
+            const updatedPermissions = await db.query(`
+                UPDATE UsuarioPermiso
+                SET estado = :estado
+                WHERE idUsuario = :idUsuario AND idPermiso = 2;
+            `, {
+                replacements: { idUsuario: user.idUsuario, estado: estado, idPermiso: permission.idPermiso },
+                type: Sequelize.QueryTypes.UPDATE,
+            });
+        
+
+            console.log('ID del usuario:', user.idUsuario);
+            console.log('ID del permiso:', permission.idPermiso);
+            console.log('ID del permiso:', estado);
+        }
+
+        res.json({
+            msg: 'Estados de permisos actualizados correctamente'
+        });
+    } catch (error) {
+        console.error('Error al actualizar los estados de permisos:', error);
+        res.status(500).json({
+            msg: 'Error interno del servidor'
+        });
+    }
+};
+
+const updatePasswordAndGroup = async (req, res) => {
+    const { username, newPassword, newGroupName } = req.body;
+    try {
+        const user = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        if (!user) {
+            return res.status(404).json({
+                msg: `Usuario ${username} no encontrado`
+            });
+        }
+
+        const lastPassword = user.contrasena;
+
+        const salt = bcryptjs.genSaltSync();
+        const passwordEncrypt = bcryptjs.hashSync(newPassword, salt);
+
+        const userGroupCurrent = await UsuarioGrupo.findOne({ where: { idUsuario: user.idUsuario } });
+        const userGroup = await Grupo.findOne({ where: { idGrupo: userGroupCurrent.idGrupo } });
+
+        if (!userGroup) {
+            return res.status(401).json({
+                msg: 'Grupo de usuario no encontrado',
+            });
+        }
+
+        if (newGroupName) {
+            const newGroup = await Grupo.findOne({ where: { nombreGrupo: newGroupName } });
+
+            if (!newGroup) {
+                return res.status(401).json({
+                    msg: `Grupo ${newGroup} no encontrado`,
+                });
+            }
+
+            // Actualizar el grupo del usuario en la tabla Usuario
+            await Usuario.update(
+                { GrupoId: newGroup.idGrupo },
+                { where: { nombreUsuario: username } }
+            );
+
+            // Obtener los permisos del nuevo grupo
+            const newGroupPermissions = await GrupoPermiso.findAll({ where: { idGrupo: newGroup.idGrupo } });
+
+            // Eliminar los permisos existentes en la tabla UsuarioPermiso para el usuario
+            await UsuarioPermiso.destroy({ where: { idUsuario: user.idUsuario } });
+
+            // Crear nuevos registros en la tabla UsuarioPermiso con los permisos del nuevo grupo
+            const newPermissions = newGroupPermissions.map((permiso) => ({
+                idUsuario: user.idUsuario,
+                idPermiso: permiso.idPermiso,
+            }));
+
+            await UsuarioPermiso.bulkCreate(newPermissions);
+        }
+
+        // Actualizar la contraseña en la tabla Usuario
+        await Usuario.update(
+            { contrasena: passwordEncrypt },
+            { where: { nombreUsuario: username } }
+        );
+
+        console.log('Contraseña y grupo actualizados correctamente');
+        res.json({
+            msg: 'Contraseña y grupo actualizados'
+        });
+    } catch (error) {
+        console.error('Error al actualizar la contraseña y grupo:', error);
+        res.status(500).json({
+            msg: 'Error interno del servidor'
+        });
+    }
+};
+
 
 module.exports = {
     getPermissionsByUser,
-    getUsers
+    getUsers,
+    updatePermissionsState,
+    updatePasswordAndGroup
 };
