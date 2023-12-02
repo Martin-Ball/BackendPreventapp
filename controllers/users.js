@@ -186,7 +186,7 @@ const updatePasswordAndGroup = async (req, res) => {
 
         let passwordEncrypt = ''
 
-        if(newPassword ==! ''){
+        if(newPassword !== ''){
             const lastPassword = user.contrasena;
 
             const salt = bcryptjs.genSaltSync();
@@ -200,6 +200,11 @@ const updatePasswordAndGroup = async (req, res) => {
                     msg: 'Grupo de usuario no encontrado',
                 });
             }
+
+            await Usuario.update(
+                { contrasena: passwordEncrypt },
+                { where: { nombreUsuario: username } }
+            );
         }
         
 
@@ -232,11 +237,6 @@ const updatePasswordAndGroup = async (req, res) => {
 
             await UsuarioPermiso.bulkCreate(newPermissions);
         }
-
-        await Usuario.update(
-            { contrasena: passwordEncrypt },
-            { where: { nombreUsuario: username } }
-        );
 
         console.log('Contraseña y grupo actualizados correctamente');
         res.json({
