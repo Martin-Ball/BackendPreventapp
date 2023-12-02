@@ -1,7 +1,13 @@
 const { Router } = require('express')
 const { validarCampos } = require('../middlewares/validar-campos')
 const { validarJWT } = require('../middlewares/validar-jwt')
-const { getPermissionsByUser, getUsers, updatePermissionsState, updatePasswordAndGroup } = require('../controllers/users')
+const { 
+    getPermissionsByUser,
+    getUsers,
+    updatePermissionsState,
+    updatePasswordAndGroup,
+    deleteUser 
+} = require('../controllers/users')
 
 const router = Router()
 
@@ -24,5 +30,10 @@ router.patch('/updateUser', [
     validarJWT,
     validarCampos
 ], updatePasswordAndGroup)
+
+router.post('/deleteUser', [
+    validarJWT,
+    validarCampos
+], deleteUser)
 
 module.exports = router

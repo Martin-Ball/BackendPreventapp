@@ -86,7 +86,7 @@ const getUsers = async (req, res) => {
             JOIN Usuario ON UsuarioAdmin.idUsuario = Usuario.idUsuario
             JOIN UsuarioGrupo ON Usuario.idUsuario = UsuarioGrupo.idUsuario
             JOIN Grupo ON UsuarioGrupo.idGrupo = Grupo.idGrupo
-            WHERE UsuarioAdmin.idAdmin = :idAdmin
+            WHERE UsuarioAdmin.idAdmin = :idAdmin AND Usuario.estado = 1
         `, {
             replacements: { idAdmin: admin.idUsuario },
             type: Sequelize.QueryTypes.SELECT,
@@ -184,21 +184,26 @@ const updatePasswordAndGroup = async (req, res) => {
             });
         }
 
-        const lastPassword = user.contrasena;
+        let passwordEncrypt = ''
 
-        const salt = bcryptjs.genSaltSync();
-        const passwordEncrypt = bcryptjs.hashSync(newPassword, salt);
+        if(newPassword ==! ''){
+            const lastPassword = user.contrasena;
 
-        const userGroupCurrent = await UsuarioGrupo.findOne({ where: { idUsuario: user.idUsuario } });
-        const userGroup = await Grupo.findOne({ where: { idGrupo: userGroupCurrent.idGrupo } });
-
-        if (!userGroup) {
-            return res.status(401).json({
-                msg: 'Grupo de usuario no encontrado',
-            });
+            const salt = bcryptjs.genSaltSync();
+            passwordEncrypt = bcryptjs.hashSync(newPassword, salt);
+    
+            const userGroupCurrent = await UsuarioGrupo.findOne({ where: { idUsuario: user.idUsuario } });
+            const userGroup = await Grupo.findOne({ where: { idGrupo: userGroupCurrent.idGrupo } });
+    
+            if (!userGroup) {
+                return res.status(401).json({
+                    msg: 'Grupo de usuario no encontrado',
+                });
+            }
         }
+        
 
-        if (newGroupName) {
+        if (newGroupName != '') {
             const newGroup = await Grupo.findOne({ where: { nombreGrupo: newGroupName } });
 
             if (!newGroup) {
@@ -207,19 +212,19 @@ const updatePasswordAndGroup = async (req, res) => {
                 });
             }
 
-            // Actualizar el grupo del usuario en la tabla Usuario
-            await Usuario.update(
-                { GrupoId: newGroup.idGrupo },
-                { where: { nombreUsuario: username } }
-            );
+            const updateGroup = await db.query(`
+                UPDATE UsuarioGrupo
+                SET idGrupo = :idNewGroup
+                WHERE idUsuario = :idUsuario;
+            `, {
+                replacements: { idUsuario: user.idUsuario, idNewGroup: newGroup.idGrupo },
+                type: Sequelize.QueryTypes.UPDATE,
+            });
 
-            // Obtener los permisos del nuevo grupo
             const newGroupPermissions = await GrupoPermiso.findAll({ where: { idGrupo: newGroup.idGrupo } });
 
-            // Eliminar los permisos existentes en la tabla UsuarioPermiso para el usuario
             await UsuarioPermiso.destroy({ where: { idUsuario: user.idUsuario } });
 
-            // Crear nuevos registros en la tabla UsuarioPermiso con los permisos del nuevo grupo
             const newPermissions = newGroupPermissions.map((permiso) => ({
                 idUsuario: user.idUsuario,
                 idPermiso: permiso.idPermiso,
@@ -228,7 +233,6 @@ const updatePasswordAndGroup = async (req, res) => {
             await UsuarioPermiso.bulkCreate(newPermissions);
         }
 
-        // Actualizar la contraseña en la tabla Usuario
         await Usuario.update(
             { contrasena: passwordEncrypt },
             { where: { nombreUsuario: username } }
@@ -246,10 +250,44 @@ const updatePasswordAndGroup = async (req, res) => {
     }
 };
 
+const deleteUser = async (req, res) => {
+    const {username} = req.body
+
+    const user = await Usuario.findOne({
+        where: { nombreUsuario: username }
+    });
+
+    if (!user) {
+        return res.status(404).json({
+            msg: `Usuario ${username} no encontrado`
+        });
+    }
+
+    try {
+        const changeUserState = await db.query(`
+            UPDATE Usuario
+            SET estado = 0
+            WHERE idUsuario = :idUsuario
+        `, {
+            replacements: { idUsuario: user.idUsuario },
+            type: Sequelize.QueryTypes.UPDATE,
+        });
+
+        res.json({
+            msg: 'Estados de permisos actualizados correctamente'
+        });
+    } catch (error) {
+        console.error('Error al actualizar los estados de permisos:', error);
+        res.status(500).json({
+            msg: 'Error interno del servidor'
+        });
+    }
+};
 
 module.exports = {
     getPermissionsByUser,
     getUsers,
     updatePermissionsState,
-    updatePasswordAndGroup
+    updatePasswordAndGroup,
+    deleteUser
 };
