@@ -3,6 +3,9 @@ const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const { generarJWT } = require("../helpers/generar-jwt");
 const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso , UsuarioAdmin } = require('../models/security-module');
+const { Administrador, Repartidor, Preventista } = require('../models/tables-db');
+const { db } = require('../database/connection')
+const { Sequelize} = require('sequelize');
 
 const login = async(req, res = response) => {
 
@@ -18,14 +21,12 @@ const login = async(req, res = response) => {
             });
         }
 
-        // Verificar si el usuario está activo
         if (user.estado == 0) {
             return res.status(400).json({
                 msg: 'Usuario/Password no son correctos - estado false'
             });
         }
 
-        // Verificar la contraseña comparando la ingresada con la del usuario
         const validPassword = bcryptjs.compareSync(password, user.contrasena);
         if (!validPassword) {
             return res.status(400).json({
@@ -33,39 +34,26 @@ const login = async(req, res = response) => {
             });
         }
 
-        const userGroup = await UsuarioGrupo.findOne({
-            where: { idUsuario: user.idUsuario },
+        const groupType = await db.query(`
+            SELECT g.idGrupo, g.nombreGrupo
+            FROM UsuarioGrupo ug
+            JOIN Grupo g ON ug.idGrupo = g.idGrupo
+            WHERE ug.idUsuario = :idUsuario;
+        `, {
+            replacements: { idUsuario: user.idUsuario },
+            type: Sequelize.QueryTypes.SELECT,
         });
 
-        const groupType = await Grupo.findOne({
-            where: { idGrupo: userGroup.idGrupo },
-        });
-        
-        
-        console.log(`UsuarioGrupo: ${userGroup.idGrupo }, ${user.idUsuario}`)
-
-
-        if (userGroup == null) {
-            return res.status(400).json({
-                msg: 'Usuario no tiene entradas en UsuarioGrupo',
-            });
-        }
-
-        const permissions = await Permiso.findAll({
-            attributes: ['idPermiso', 'nombrePermiso'],
-            include: [
-                {
-                    model: Grupo,
-                    through: {
-                        model: GrupoPermiso,
-                        where: { idGrupo: userGroup.idGrupo },
-                    },
-                    attributes: [],
-                },
-            ],
+        const permissions = await db.query(`
+            SELECT p.nombrePermiso, up.estado
+            FROM UsuarioPermiso up
+            JOIN Permiso p ON up.idPermiso = p.idPermiso
+            WHERE up.idUsuario = :idUsuario;
+        `, {
+            replacements: { idUsuario: user.idUsuario },
+            type: Sequelize.QueryTypes.SELECT,
         });
 
-        // Generar el JWT
         const token = await generarJWT(user.idUsuario);
 
         res.json({
@@ -162,7 +150,23 @@ const register = async (req, res = response) => {
         await UsuarioGrupo.create({
             idUsuario: newUser.idUsuario,
             idGrupo: group.idGrupo,
-          });
+        });
+
+        if (type === 'Administrador') {
+            await Administrador.create({
+                email: username,
+            });
+        } else if (type === 'Repartidor') {
+            await Repartidor.create({
+                email: username,
+                administrador_email: usernameAdmin,
+            });
+        } else if (type === 'Preventista') {
+            await Preventista.create({
+                email: username,
+                administrador_email: usernameAdmin,
+            });
+        }
         
         if(usernameAdmin != ""){
             const {idUsuario} = await Usuario.findOne({ where: { nombreUsuario: usernameAdmin } });
@@ -190,6 +194,7 @@ const register = async (req, res = response) => {
         const userPermissions = permissionsForGroup.map((permiso) => ({
             idUsuario: newUser.idUsuario,
             idPermiso: permiso.idPermiso,
+            esta
         }));
 
         await UsuarioPermiso.bulkCreate(userPermissions);
