@@ -145,7 +145,7 @@ const getListPrices = async (req, res = response) => {
             nombre: idListResult[0].nombre,
             fechaVigencia: idListResult[0].fechaVigencia,
             productos: productList.map(item => ({
-                nombreProducto: item.nombreProducto,
+                nombreProducto: item.nombre,
                 marca: item.marca,
                 presentacion: item.presentacion,
                 cantidad_unidad: item.cantidad_unidad,
