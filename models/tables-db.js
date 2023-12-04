@@ -103,15 +103,30 @@ const ListaDePrecios = db.define('ListaDePrecios', {
     nombre: {
         type: DataTypes.STRING,
     },
-    preventista_email: {
-        type: DataTypes.STRING,
-    },
 }, {
     tableName: 'ListaDePrecios',
     timestamps: false,
 });
 
-ListaDePrecios.belongsTo(Preventista, { foreignKey: 'preventista_email' });
+const Preventista_ListaDePrecio = db.define('Preventista_ListaDePrecio', {
+    idLista: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true
+    },
+    email: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        primaryKey: true
+    },
+}, {
+    tableName: 'Preventista_ListaDePrecio',
+    timestamps: false,
+});
+
+Preventista_ListaDePrecio.belongsTo(ListaDePrecios, { foreignKey: 'idLista' });
+Preventista_ListaDePrecio.belongsTo(Preventista, { foreignKey: 'email' });
+
 
 const Producto = db.define('Producto', {
     idProducto: {
@@ -172,7 +187,7 @@ const Producto_ListaDePrecio = db.define('Producto_ListaDePrecio', {
         primaryKey: true,
     },
     precioUnitario: {
-        type: DataTypes.DECIMAL(5, 2),
+        type: DataTypes.DECIMAL(10, 2),
         field: 'precioUnitario',
     },
 }, {
@@ -203,4 +218,5 @@ module.exports = {
     Producto,
     LineaPedido,
     Producto_ListaDePrecio,
+    Preventista_ListaDePrecio
 };

@@ -1,9 +1,10 @@
 const { response, json } = require("express");
-const { ListaDePrecios, Producto_ListaDePrecio, Producto, Cantidad } = require('../models/tables-db');
+const { ListaDePrecios, Producto_ListaDePrecio, Producto, Cantidad, Preventista_ListaDePrecio } = require('../models/tables-db');
 const jwt = require('jsonwebtoken')
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
 const bcryptjs = require('bcryptjs');
+const { Usuario } = require("../models/security-module");
 
 const newList = async (req, res = response) => {
     const { nombreLista, usuario, productos } = req.body;
@@ -21,7 +22,6 @@ const newList = async (req, res = response) => {
     try {
         const createdList = await ListaDePrecios.create({
             nombre: nombreLista,
-            preventista_email: usuario
         });
 
         for (const producto of productos) {
@@ -47,15 +47,42 @@ const newList = async (req, res = response) => {
                     marca: producto.marca,
                     presentacion: producto.presentacion,
                     cantidad_unidad: existingAmount.unidad
+                });
 
+                const productList = await Producto_ListaDePrecio.create({
+                    idLista: createdList.idLista,
+                    idProducto: existingProduct.idProducto,
+                    precioUnitario: producto.precio
                 });
             }
+        }
 
-            const productList = await Producto_ListaDePrecio.create({
-                idLista: createdList.idLista,
-                idProducto: existingProduct.idProducto,
-                precioUnitario: precio
+        let adminUser = await Usuario.findOne({
+            where: { nombreUsuario: usuario }
+        });
+
+        const resellersByAdmin = await db.query(`
+            SELECT u.nombreUsuario
+            FROM Usuario u
+            JOIN UsuarioAdmin ua ON u.idUsuario = ua.idUsuario
+            JOIN UsuarioGrupo ug ON u.idUsuario = ug.idUsuario
+            WHERE ua.idAdmin = :idAdmin AND ug.idGrupo = 3
+        `, {
+            replacements: { idAdmin: adminUser.idUsuario,  },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        if (!resellersByAdmin) {
+            return res.status(400).json({
+                msg: `No tiene preventistas asociados a su usuario`
             });
+        }else{            
+            for (reseller of resellersByAdmin){
+                existingAmount = await Preventista_ListaDePrecio.create({
+                    idLista: createdList.idLista,
+                    email: reseller.nombreUsuario
+                });
+            }
         }
 
         res.json({
