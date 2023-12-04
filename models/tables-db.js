@@ -1,5 +1,6 @@
 const { Sequelize, DataTypes } = require('sequelize');
 const { db } = require('../database/connection');
+const { Usuario } = require('../models/security-module')
 
 const Administrador = db.define('Administrador', {
     email: {
@@ -63,6 +64,25 @@ const Cliente = db.define('Cliente', {
     tableName: 'Cliente',
     timestamps: false,
 });
+
+const ClienteUsuario = db.define('ClienteUsuario', {
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+    },
+    idCliente: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        primaryKey: true,
+    },
+}, {
+    tableName: 'ClienteUsuario',
+    timestamps: false,
+});
+
+ClienteUsuario.belongsTo(Usuario, { foreignKey: 'idUsuario' });
+ClienteUsuario.belongsTo(Cliente, { foreignKey: 'idCliente' });
 
 const Pedido = db.define('Pedido', {
     idPedido: {
@@ -224,5 +244,6 @@ module.exports = {
     Producto,
     LineaPedido,
     Producto_ListaDePrecio,
-    Preventista_ListaDePrecio
+    Preventista_ListaDePrecio,
+    ClienteUsuario
 };
