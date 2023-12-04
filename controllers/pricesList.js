@@ -5,9 +5,10 @@ const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
 const bcryptjs = require('bcryptjs');
 const { Usuario } = require("../models/security-module");
+const moment = require('moment');
 
 const newList = async (req, res = response) => {
-    const { nombreLista, usuario, productos } = req.body;
+    const { nombreLista, usuario, productos, fechaVigencia } = req.body;
 
     const existingList = await ListaDePrecios.findOne({
         where: { nombre: nombreLista }
@@ -22,6 +23,7 @@ const newList = async (req, res = response) => {
     try {
         const createdList = await ListaDePrecios.create({
             nombre: nombreLista,
+            fechaVigencia: moment(fechaVigencia, 'DD/MM/YYYY').format('YYYY-MM-DD')
         });
 
         for (const producto of productos) {
@@ -80,7 +82,8 @@ const newList = async (req, res = response) => {
             for (reseller of resellersByAdmin){
                 existingAmount = await Preventista_ListaDePrecio.create({
                     idLista: createdList.idLista,
-                    email: reseller.nombreUsuario
+                    email: reseller.nombreUsuario,
+                    email_administrador: adminUser.nombreUsuario
                 });
             }
         }
@@ -96,6 +99,70 @@ const newList = async (req, res = response) => {
     }
 };
 
+const getListPrices = async (req, res = response) => {
+    const { username } = req.query;
+
+    try {
+        const idListResult = await db.query(`
+        SELECT DISTINCT
+            plp.idLista,
+            lp.nombre,
+            lp.fechaVigencia
+        FROM Preventista_ListaDePrecio plp
+        JOIN ListaDePrecios lp ON plp.idLista = lp.idLista
+        WHERE plp.email = :nombreUsuario OR plp.email_administrador = :nombreUsuario;
+        `, {
+            replacements: { nombreUsuario: username },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        if (!idListResult || idListResult.length === 0) {
+            return res.status(404).json({
+                msg: 'No se encontró ninguna lista asociada al usuario proporcionado.',
+            });
+        }
+
+        const idList = idListResult[0].idLista;
+        const productList = await db.query(`
+            SELECT DISTINCT
+                plp2.idProducto,
+                pr.nombre,
+                pr.marca,
+                pr.presentacion,
+                pr.cantidad_unidad,
+                plp2.precioUnitario
+            FROM Preventista_ListaDePrecio plp
+            JOIN Producto_ListaDePrecio plp2 ON plp.idLista = plp2.idLista
+            JOIN Producto pr ON plp2.idProducto = pr.idProducto
+            WHERE plp2.idLista = :idLista;
+        `, {
+            replacements: { idLista: idList },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        const lists = {
+            idLista: idListResult[0].idLista,
+            nombre: idListResult[0].nombre,
+            fechaVigencia: idListResult[0].fechaVigencia,
+            productos: productList.map(item => ({
+                nombreProducto: item.nombreProducto,
+                marca: item.marca,
+                presentacion: item.presentacion,
+                cantidad_unidad: item.cantidad_unidad,
+                precio: item.precioUnitario,
+            })),
+        };
+
+        res.status(200).json(lists);
+    } catch (error) {
+        console.error('Error al obtener la lista de precios:', error);
+        res.status(500).json({
+            msg: 'Error interno del servidor',
+        });
+    }
+};
+
 module.exports = {
-    newList
+    newList,
+    getListPrices
 };

@@ -103,6 +103,9 @@ const ListaDePrecios = db.define('ListaDePrecios', {
     nombre: {
         type: DataTypes.STRING,
     },
+    fechaVigencia: {
+        type: DataTypes.DATE,
+    },
 }, {
     tableName: 'ListaDePrecios',
     timestamps: false,
@@ -119,6 +122,9 @@ const Preventista_ListaDePrecio = db.define('Preventista_ListaDePrecio', {
         allowNull: false,
         primaryKey: true
     },
+    email_administrador: {
+        type: DataTypes.STRING
+    }
 }, {
     tableName: 'Preventista_ListaDePrecio',
     timestamps: false,
