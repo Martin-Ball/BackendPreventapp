@@ -90,10 +90,16 @@ const Pedido = db.define('Pedido', {
         primaryKey: true,
         autoIncrement: true
     },
+    idCliente: {
+        type: DataTypes.INTEGER,
+    },
     nota: {
         type: DataTypes.TEXT,
     },
     preventista_email: {
+        type: DataTypes.STRING,
+    },
+    estado: {
         type: DataTypes.STRING,
     },
 }, {
@@ -182,16 +188,20 @@ Producto.belongsTo(Cantidad, { foreignKey: 'cantidad_unidad' });
 const LineaPedido = db.define('LineaPedido', {
     idProducto: {
         type: DataTypes.INTEGER,
+        primaryKey: true
     },
     idPedido: {
         type: DataTypes.INTEGER,
         primaryKey: true,
     },
-    idCliente: {
+    cantidad: {
         type: DataTypes.INTEGER,
     },
-    nota: {
-        type: DataTypes.TEXT,
+    precio: {
+        type: DataTypes.INTEGER,
+    },
+    fecha: {
+        type: DataTypes.DATE,
     },
 }, {
     tableName: 'LineaPedido',

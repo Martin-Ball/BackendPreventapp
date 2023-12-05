@@ -13,7 +13,8 @@ class Server {
             auth:       '/api/auth',
             users:      '/api/users',
             list:       '/api/pricesList',
-            clients:       '/api/clientsList'   
+            clients:    '/api/clientsList',
+            orders:     '/api/orders'   
         }
 
         //Conectar a base de datos
@@ -47,6 +48,7 @@ class Server {
         this.app.use( this.paths.users, require('../routes/users') )
         this.app.use( this.paths.list, require('../routes/pricesList') )
         this.app.use( this.paths.clients, require('../routes/clientList') )
+        this.app.use( this.paths.orders, require('../routes/orders') )
     }
 
     listen(){

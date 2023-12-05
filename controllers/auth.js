@@ -72,21 +72,21 @@ const login = async(req, res = response) => {
 };
 
 const renewToken = async (req, res = response) => {
-    const token = req.header('x-token')
+    const token = req.header('x-token');
   
     try {
-      const esTokenValido = await validarToken(token);
-
-      console.log(esTokenValido)
+      const { valid, uid } = await validarToken(token);
   
-      if (!esTokenValido) {
+      console.log(valid);
+  
+      if (!valid) {
         return res.json({
           valid: false,
         });
       }
       
-      console.log(`uid de x-token: ${req.uid}`)
-      const newToken = await generarJWT(req.uid);
+      console.log(`uid de x-token: ${uid}`);
+      const newToken = await generarJWT(uid);
   
       res.json({
         valid: true,
@@ -105,9 +105,9 @@ const validarToken = async (token) => {
       jwt.verify(token, process.env.SECRETORPRIVATEKEY, (err, decoded) => {
         if (err) {
           console.log(`error: ${err}`)
-          resolve(false);
+          resolve({ valid: false, uid: null });
         } else {
-          resolve(true);
+          resolve({ valid: true, uid: decoded.uid });
         }
       });
     });
