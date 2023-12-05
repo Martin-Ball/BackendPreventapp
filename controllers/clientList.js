@@ -35,17 +35,23 @@ const newClientList = async (req, res = response) => {
         for (const client of clientes) {
             const { nombre, direccion, horarioEntrega } = client;
 
-            const newClient = await Cliente.create({
-                nombre: nombre,
-                direccion: direccion,
-                horarioEntrega: horarioEntrega
+            const user = await Usuario.findOne({
+                where: { nombreUsuario: username }
             });
-
-            for (user of usersByAdmin){
-                existingAmount = await ClienteUsuario.create({
-                    idUsuario: user.idUsuario,
-                    idCliente: newClient.idCliente
+    
+            if (!user) {
+                const newClient = await Cliente.create({
+                    nombre: nombre,
+                    direccion: direccion,
+                    horarioEntrega: horarioEntrega
                 });
+    
+                for (user of usersByAdmin){
+                    const client = await ClienteUsuario.create({
+                        idUsuario: user.idUsuario,
+                        idCliente: newClient.idCliente
+                    });
+                }
             }
         
         }
