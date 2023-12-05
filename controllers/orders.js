@@ -29,7 +29,7 @@ const newOrder = async (req, res = response) => {
             idCliente: client.idCliente,
             nota: nota, 
             preventista_email: user.nombreUsuario,
-            estado: 1
+            estado: "Nuevo"
         });
 
         for(const product of productos){
