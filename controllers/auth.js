@@ -194,7 +194,7 @@ const register = async (req, res = response) => {
         const userPermissions = permissionsForGroup.map((permiso) => ({
             idUsuario: newUser.idUsuario,
             idPermiso: permiso.idPermiso,
-            esta
+            estado: 1
         }));
 
         await UsuarioPermiso.bulkCreate(userPermissions);

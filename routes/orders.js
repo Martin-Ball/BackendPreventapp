@@ -1,7 +1,15 @@
 const { Router } = require('express')
 const { validarCampos } = require('../middlewares/validar-campos')
 const { validarJWT } = require('../middlewares/validar-jwt')
-const { newOrder, getNewOrders, sendOrderToDelivery, cancelOrder } = require('../controllers/orders')
+const { 
+    newOrder,
+    getNewOrders, 
+    sendOrderToDelivery, 
+    cancelOrder, 
+    getOrdersByDate, 
+    orderDelivered, 
+    notDeliverOrder 
+} = require('../controllers/orders')
 
 const router = Router()
 
@@ -24,5 +32,20 @@ router.post('/cancelOrder', [
     validarJWT,
     validarCampos
 ], cancelOrder)  
+
+router.post('/orderDelivered', [
+    validarJWT,
+    validarCampos
+], orderDelivered)  
+
+router.post('/notDeliverOrder', [
+    validarJWT,
+    validarCampos
+], notDeliverOrder)  
+
+router.get('/getOrdersByDate', [
+    validarJWT,
+    validarCampos
+], getOrdersByDate)
 
 module.exports = router

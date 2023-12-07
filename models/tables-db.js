@@ -102,6 +102,9 @@ const Pedido = db.define('Pedido', {
     estado: {
         type: DataTypes.STRING,
     },
+    fecha: {
+        type: DataTypes.DATE,
+    },
 }, {
     tableName: 'Pedido',
     timestamps: false,
