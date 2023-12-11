@@ -199,12 +199,17 @@ const register = async (req, res = response) => {
 
         await UsuarioPermiso.bulkCreate(userPermissions);
 
+        const userPermissionsResponse = permissionsForGroup.map((permiso) => ({
+            nombrePermiso: permiso.nombrePermiso,
+            estado: 1
+        }));
+
         const token = await generarJWT(newUser.idUsuario);
 
         res.json({
             newUser,
             group,
-            permissionsForGroup,
+            userPermissionsResponse,
             token,
         });
     } catch (error) {
