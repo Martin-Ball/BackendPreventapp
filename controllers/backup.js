@@ -66,6 +66,70 @@ const executeBackup = (res, connection, backupFilePath) => {
   connection.execSql(request);
 };
 
+const restoreDatabase = async (req, res) => {
+    try {
+      const config = {
+        authentication: {
+          options: {
+            userName: process.env.DB_USERNAME,
+            password: process.env.DB_PASSWORD,
+          },
+          type: 'default',
+        },
+        server: process.env.DB_HOST,
+        options: {
+          database: 'master',
+          encrypt: true,
+        },
+      };
+  
+      const connection = new Connection(config);
+  
+      connection.on('connect', (err) => {
+        if (err) {
+          console.error('Error al conectar:', err);
+          res.status(500).json({ error: 'Error al conectar a la base de datos' });
+        } else {
+          console.log('Conexión establecida.');
+  
+          executeRestore(res, connection);
+        }
+      });
+  
+      connection.on('error', (err) => {
+        console.error('Error de conexión:', err);
+        res.status(500).json({ error: 'Error de conexión a la base de datos' });
+      });
+  
+      connection.connect();
+    } catch (error) {
+      console.error('Error al realizar la restauración:', error);
+      res.status(500).json({ error: 'Error al realizar la restauración' });
+    }
+  };
+  
+  const executeRestore = (res, connection) => {
+    const backupFilePath = 'C:\\Program Files\\Microsoft SQL Server\\MSSQL16.SQLEXPRESS\\MSSQL\\Backup\\Preventapp.bak';
+  
+    const query = `RESTORE DATABASE ${process.env.DB_NAME} FROM DISK = '${backupFilePath}' WITH REPLACE;`;
+  
+    const request = new Request(query, (err) => {
+      if (err) {
+        console.error('Error al ejecutar la restauración:', err);
+        res.status(500).json({ error: 'Error al ejecutar la restauración' });
+      } else {
+        console.log('Restauración completada con éxito.');
+  
+        connection.close();
+  
+        res.json({ message: 'Restauración completada con éxito' });
+      }
+    });
+  
+    connection.execSql(request);
+  };
+
 module.exports = {
   backupDatabase,
+  restoreDatabase
 };
