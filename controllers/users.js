@@ -150,7 +150,7 @@ const updatePermissionsState = async (req, res) => {
             const updatedPermissions = await db.query(`
                 UPDATE UsuarioPermiso
                 SET estado = :estado
-                WHERE idUsuario = :idUsuario AND idPermiso = 2;
+                WHERE idUsuario = :idUsuario AND idPermiso = :idPermiso;
             `, {
                 replacements: { idUsuario: user.idUsuario, estado: estado, idPermiso: permission.idPermiso },
                 type: Sequelize.QueryTypes.UPDATE,

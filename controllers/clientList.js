@@ -35,11 +35,7 @@ const newClientList = async (req, res = response) => {
         for (const client of clientes) {
             const { nombre, direccion, horarioEntrega } = client;
 
-            const user = await Usuario.findOne({
-                where: { nombreUsuario: username }
-            });
-    
-            if (!user) {
+        
                 const newClient = await Cliente.create({
                     nombre: nombre,
                     direccion: direccion,
@@ -47,13 +43,16 @@ const newClientList = async (req, res = response) => {
                 });
     
                 for (user of usersByAdmin){
+                    const userFound = await Usuario.findOne({
+                        where: { idUsuario: user.idUsuario }
+                    });
+
                     const client = await ClienteUsuario.create({
-                        idUsuario: user.idUsuario,
+                        idUsuario: userFound.idUsuario,
                         idCliente: newClient.idCliente
                     });
                 }
-            }
-        
+            
         }
 
         res.json({
