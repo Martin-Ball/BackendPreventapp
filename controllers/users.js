@@ -284,10 +284,35 @@ const deleteUser = async (req, res) => {
     }
 };
 
+const getUserInfo = async (req, res) => {
+    const { nombreUsuario } = req.query;
+
+    try {
+        const userInfo = await db.query(`
+            SELECT u.idUsuario, u.nombreUsuario, ug.idGrupo, g.nombreGrupo
+            FROM Usuario u
+            JOIN UsuarioGrupo ug ON u.idUsuario = ug.idUsuario
+            JOIN Grupo g ON ug.idGrupo = g.idGrupo
+            WHERE u.nombreUsuario = :nombreUsuario;
+        `, {
+            replacements: { nombreUsuario: nombreUsuario },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        res.json(userInfo[0]);
+    } catch (error) {
+        console.error('Error al obtener la información del usuario:', error);
+        res.status(500).json({
+            msg: 'Error interno del servidor',
+        });
+    }
+};
+
 module.exports = {
     getPermissionsByUser,
     getUsers,
     updatePermissionsState,
     updatePasswordAndGroup,
-    deleteUser
+    deleteUser,
+    getUserInfo
 };

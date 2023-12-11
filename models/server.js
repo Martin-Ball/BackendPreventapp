@@ -14,7 +14,8 @@ class Server {
             users:      '/api/users',
             list:       '/api/pricesList',
             clients:    '/api/clientsList',
-            orders:     '/api/orders'   
+            orders:     '/api/orders',
+            recommended:'/api/recommended'   
         }
 
         //Conectar a base de datos
@@ -49,6 +50,7 @@ class Server {
         this.app.use( this.paths.list, require('../routes/pricesList') )
         this.app.use( this.paths.clients, require('../routes/clientList') )
         this.app.use( this.paths.orders, require('../routes/orders') )
+        this.app.use( this.paths.recommended, require('../routes/recommended') )
     }
 
     listen(){

@@ -6,7 +6,8 @@ const {
     getUsers,
     updatePermissionsState,
     updatePasswordAndGroup,
-    deleteUser 
+    deleteUser, 
+    getUserInfo
 } = require('../controllers/users')
 
 const router = Router()
@@ -35,5 +36,10 @@ router.post('/deleteUser', [
     validarJWT,
     validarCampos
 ], deleteUser)
+
+router.get('/getProfile', [
+    validarJWT,
+    validarCampos
+], getUserInfo)
 
 module.exports = router

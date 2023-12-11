@@ -183,11 +183,11 @@ const getNewOrders = async (req, res = response) => {
 };
 
 const getOrdersByDate = async (req, res = response) => {
-    const { usuario, fecha, isSeller } = req.query;
+    const { usuario, fecha, groupType } = req.query;
 
     try {
         let ordersByDate
-        if(isSeller !== 'true'){
+        if(groupType == 1){ //Admin
             ordersByDate = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
                     c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
@@ -217,7 +217,51 @@ const getOrdersByDate = async (req, res = response) => {
                 replacements: { usernameAdmin: usuario, fecha: fecha },
                 type: Sequelize.QueryTypes.SELECT,
             });
-        }else{
+        }else if(groupType == 2){ //Delivery
+            userAdmin = await db.query(`
+                SELECT ua.idAdmin, uAdmin.nombreUsuario
+                FROM UsuarioAdmin ua
+                JOIN Usuario u ON ua.idUsuario = u.idUsuario
+                JOIN Usuario uAdmin ON ua.idAdmin = uAdmin.idUsuario
+                WHERE u.nombreUsuario = :usuario;
+                `, {
+                replacements: { usuario: usuario, fecha: fecha },
+                type: Sequelize.QueryTypes.SELECT,
+            });
+
+            const userAdminName = userAdmin[0].nombreUsuario
+
+            ordersByDate = await db.query(`
+                SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                FROM Pedido p
+                JOIN Cliente c ON p.idCliente = c.idCliente
+                WHERE p.preventista_email IN (
+                    SELECT u.nombreUsuario
+                    FROM Usuario u
+                    JOIN UsuarioAdmin ua ON u.idUsuario = ua.idUsuario
+                    WHERE ua.idAdmin = (
+                        SELECT idUsuario
+                        FROM Usuario
+                        WHERE nombreUsuario = :userAdmin
+                    )
+                    AND u.idUsuario IN (
+                        SELECT idUsuario
+                        FROM UsuarioGrupo
+                        WHERE idGrupo = (
+                            SELECT idGrupo
+                            FROM Grupo
+                            WHERE nombreGrupo = 'Preventista'
+                        )
+                    )
+                )
+                AND p.fecha = :fecha
+                AND p.estado IN ('Entregado', 'No entregado', 'Enviado');
+            `, {
+                replacements: { userAdmin: userAdminName, fecha: fecha },
+                type: Sequelize.QueryTypes.SELECT,
+            });
+        }else{ //Seller
             ordersByDate = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
                     c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
