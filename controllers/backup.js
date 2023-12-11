@@ -80,6 +80,7 @@ const restoreDatabase = async (req, res) => {
         options: {
           database: 'master',
           encrypt: true,
+          trustServerCertificate: true,
         },
       };
   
@@ -92,7 +93,7 @@ const restoreDatabase = async (req, res) => {
         } else {
           console.log('Conexión establecida.');
   
-          executeRestore(res, connection);
+          executeRestore(res, connection, 60000);
         }
       });
   
@@ -108,26 +109,28 @@ const restoreDatabase = async (req, res) => {
     }
   };
   
-  const executeRestore = (res, connection) => {
-    const backupFilePath = 'C:\\Program Files\\Microsoft SQL Server\\MSSQL16.SQLEXPRESS\\MSSQL\\Backup\\Preventapp.bak';
-  
-    const query = `RESTORE DATABASE ${process.env.DB_NAME} FROM DISK = '${backupFilePath}' WITH REPLACE;`;
-  
-    const request = new Request(query, (err) => {
-      if (err) {
-        console.error('Error al ejecutar la restauración:', err);
-        res.status(500).json({ error: 'Error al ejecutar la restauración' });
-      } else {
-        console.log('Restauración completada con éxito.');
-  
-        connection.close();
-  
-        res.json({ message: 'Restauración completada con éxito' });
-      }
-    });
-  
-    connection.execSql(request);
-  };
+const executeRestore = (res, connection, timeout) => {
+  const backupFilePath = 'C:\\Program Files\\Microsoft SQL Server\\MSSQL16.SQLEXPRESS\\MSSQL\\Backup\\preventapp.bak';
+
+  const query = `RESTORE DATABASE ${process.env.DB_NAME} FROM DISK = '${backupFilePath}' WITH REPLACE, RECOVERY;`;
+
+  const request = new Request(query, (err) => {
+    if (err) {
+      console.error('Error al ejecutar la restauración:', err);
+      res.status(500).json({ error: 'Error al ejecutar la restauración' });
+    } else {
+      console.log('Restauración completada con éxito.');
+
+      connection.close();
+
+      res.json({ message: 'Restauración completada con éxito' });
+    }
+  });
+
+  request.setTimeout(timeout);
+
+  connection.execSql(request);
+};
 
 module.exports = {
   backupDatabase,
