@@ -177,19 +177,16 @@ const register = async (req, res = response) => {
             });
         }
 
-        const permissionsForGroup = await Permiso.findAll({
-            attributes: ['idPermiso', 'nombrePermiso'],
-            include: [
-                {
-                    model: Grupo,
-                    through: {
-                        model: GrupoPermiso,
-                        where: { idGrupo: group.idGrupo },
-                    },
-                    attributes: [],
-                },
-            ],
+        const permissionsForGroup = await db.query(`
+            SELECT gp.idGrupo, gp.idPermiso, p.nombrePermiso
+            FROM GrupoPermiso gp
+            JOIN Permiso p ON gp.idPermiso = p.idPermiso
+            WHERE gp.idGrupo = :idGrupo;
+        `, {
+            replacements: { idGrupo: group.idGrupo },
+            type: Sequelize.QueryTypes.SELECT,
         });
+        
 
         const userPermissions = permissionsForGroup.map((permiso) => ({
             idUsuario: newUser.idUsuario,
