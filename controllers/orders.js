@@ -30,7 +30,7 @@ const newOrder = async (req, res = response) => {
             nota: nota, 
             preventista_email: user.nombreUsuario,
             estado: "Nuevo",
-            fecha: moment().toDate()
+            fecha: moment().local('es-AR').toDate()
         });
 
         for(const product of productos){
@@ -38,20 +38,27 @@ const newOrder = async (req, res = response) => {
                 where: { nombre: product.nombreProducto }
             });
 
-            const orderLine = await LineaPedido.create({
-                idPedido: createdOrder.idPedido,
-                idProducto: productFound.idProducto,
-                precio: product.precio,
-                cantidad: product.cantidad,
-                fecha: moment().toDate()
+            const orderLineFound = await LineaPedido.findOne({
+                where: { idPedido: createdOrder.idPedido }
             });
+
+            if(!orderLineFound){
+                const orderLine = await LineaPedido.create({
+                    idPedido: createdOrder.idPedido,
+                    idProducto: productFound.idProducto,
+                    precio: product.precio,
+                    cantidad: product.cantidad,
+                    fecha: moment().local('es-AR').toDate()
+                });  
+            }
+            
         }    
 
         res.json({
             msg: 'Pedido creado correctamente'
         });
     } catch (error) {
-        console.error('Error al crear la lista de precios:', error);
+        console.error('Error al crear el pedido:', error);
         res.status(500).json({
             msg: 'Error interno del servidor'
         });
@@ -303,7 +310,7 @@ const getOrdersByDate = async (req, res = response) => {
 
             const orderDetails = {
                 idPedido: order.idPedido,
-                fecha: order.fecha,
+                fecha: moment(order.fecha).add(1, 'days').format('YYYY-MM-DD'),
                 estado: order.estado,
                 cliente: {
                     idCliente: order.idCliente,
