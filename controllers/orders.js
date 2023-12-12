@@ -37,20 +37,15 @@ const newOrder = async (req, res = response) => {
             const productFound = await Producto.findOne({
                 where: { nombre: product.nombreProducto }
             });
-
-            const orderLineFound = await LineaPedido.findOne({
-                where: { idPedido: createdOrder.idPedido }
-            });
-
-            if(!orderLineFound){
-                const orderLine = await LineaPedido.create({
-                    idPedido: createdOrder.idPedido,
-                    idProducto: productFound.idProducto,
-                    precio: product.precio,
-                    cantidad: product.cantidad,
-                    fecha: moment().local('es-AR').toDate()
-                });  
-            }
+        
+            const orderLine = await LineaPedido.create({
+                idPedido: createdOrder.idPedido,
+                idProducto: productFound.idProducto,
+                precio: product.precio,
+                cantidad: product.cantidad,
+                fecha: moment().local('es-AR').toDate()
+            });  
+        
             
         }    
 
