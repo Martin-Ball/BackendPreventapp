@@ -16,7 +16,8 @@ class Server {
             clients:    '/api/clientsList',
             orders:     '/api/orders',
             recommended:'/api/recommended',
-            backup:     '/api/backup'   
+            backup:     '/api/backup',
+            audit:      '/api/audit'   
         }
 
         //Conectar a base de datos
@@ -53,6 +54,7 @@ class Server {
         this.app.use( this.paths.orders, require('../routes/orders') )
         this.app.use( this.paths.recommended, require('../routes/recommended') )
         this.app.use( this.paths.backup, require('../routes/backup') )
+        this.app.use( this.paths.audit, require('../routes/audit') )
     }
 
     listen(){

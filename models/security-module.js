@@ -95,7 +95,30 @@ const UsuarioAdmin = db.define('UsuarioAdmin', {
 Usuario.belongsToMany(Usuario, { through: UsuarioAdmin, foreignKey: 'idAdmin', as: 'Admin' });
 Usuario.belongsToMany(Usuario, { through: UsuarioAdmin, foreignKey: 'idUsuario', as: 'Usuario' });
 
+const LoginUsuarioAuditoria = db.define('LoginUsuarioAuditoria', {
+    idAuditoria: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+    fechaInicioSesion: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+}, {
+    tableName: 'LoginUsuarioAuditoria',
+    timestamps: false,
+});
 
+LoginUsuarioAuditoria.belongsTo(Usuario, { foreignKey: 'idUsuario' });
 
 db.sync()
     .then(() => {
@@ -114,4 +137,5 @@ module.exports = {
     UsuarioAdmin,
     GrupoPermiso,
     GrupoGrupo,
+    LoginUsuarioAuditoria
 };

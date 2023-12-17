@@ -2,10 +2,11 @@ const { response, json } = require("express");
 const bcryptjs = require('bcryptjs');
 const jwt = require('jsonwebtoken')
 const { generarJWT } = require("../helpers/generar-jwt");
-const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso , UsuarioAdmin } = require('../models/security-module');
+const { Usuario, Grupo, Permiso, GrupoPermiso, UsuarioGrupo, UsuarioPermiso , UsuarioAdmin, LoginUsuarioAuditoria } = require('../models/security-module');
 const { Administrador, Repartidor, Preventista } = require('../models/tables-db');
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
+const moment = require('moment');
 
 const login = async(req, res = response) => {
 
@@ -55,6 +56,11 @@ const login = async(req, res = response) => {
         });
 
         const token = await generarJWT(user.idUsuario);
+
+        const logins = await LoginUsuarioAuditoria.create({
+            idUsuario: user.idUsuario,
+            fechaInicioSesion: Sequelize.literal('GETDATE()'),
+        });
 
         res.json({
             user,
