@@ -2,7 +2,7 @@ const { Router } = require('express')
 const { check } = require('express-validator')
 const { validarCampos } = require('../middlewares/validar-campos')
 const { validarJWT } = require('../middlewares/validar-jwt')
-const { getLoginUser, getTurnoverUser, getRecommendedReports, getOrdersChangeState, getProductPriceAudit } = require('../controllers/audit')
+const { getLoginUser, getTurnoverUser, getRecommendedReports, getOrdersChangeState, getProductPriceAudit, getClientPurchasesAudit } = require('../controllers/audit')
 
 const router = Router()
 
@@ -30,5 +30,10 @@ router.get('/getProductsPrice', [
     validarJWT,
     validarCampos
 ], getProductPriceAudit) 
+
+router.get('/getClientPurchases', [
+    validarJWT,
+    validarCampos
+], getClientPurchasesAudit) 
 
 module.exports = router

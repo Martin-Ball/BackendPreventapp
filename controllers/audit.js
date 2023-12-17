@@ -1,6 +1,6 @@
 const { response, json } = require("express");
 const { Usuario } = require('../models/security-module');
-const { LineaPedido } = require('../models/tables-db');
+const { LineaPedido, Cliente } = require('../models/tables-db');
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
 
@@ -243,10 +243,58 @@ const getProductPriceAudit = async(req, res = response) => {
     }
 };
 
+const getClientPurchasesAudit = async(req, res = response) => {
+
+    const { clientName } = req.query
+
+    try {
+
+        const user = await Cliente.findOne({ where: { nombre: clientName } });
+
+        if (!user) {
+            return res.status(400).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        const clientPurchases = await db.query(`
+            SELECT
+                p.fecha,
+                p.preventista_email,
+                SUM(lp.precio * lp.cantidad) AS montoTotal,
+                c.nombre AS nombreCliente
+            FROM
+                Pedido p
+            INNER JOIN
+                Cliente c ON p.idCliente = c.idCliente
+            INNER JOIN
+                LineaPedido lp ON p.idPedido = lp.idPedido
+            WHERE
+                c.nombre = :clientName
+            GROUP BY
+                p.idPedido, p.fecha, c.nombre, p.preventista_email;
+        `, {
+            replacements: { clientName: clientName },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        res.json({
+            clientPurchases
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Hable con el administrador'
+        });
+    }
+};
+
 module.exports = {
     getLoginUser,
     getTurnoverUser,
     getRecommendedReports,
     getOrdersChangeState,
-    getProductPriceAudit
+    getProductPriceAudit,
+    getClientPurchasesAudit
 };
