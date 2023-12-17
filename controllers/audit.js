@@ -165,9 +165,88 @@ const getOrdersChangeState = async(req, res = response) => {
     }
 };
 
+const getProductPriceAudit = async(req, res = response) => {
+
+    const { username, month, productName } = req.query
+
+    try {
+
+        const user = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        if (!user) {
+            return res.status(400).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        const productsPrice = await db.query(`
+            SELECT
+                p.nombre AS nombreProducto,
+                lp.nombre AS nombreLista,
+                plpd.precioUnitario,
+                lp.fechaVigencia,
+                alp.fechaCreacion
+            FROM
+                Producto p
+            INNER JOIN
+                Producto_ListaDePrecio plpd ON p.idProducto = plpd.idProducto
+            INNER JOIN
+                ListaDePrecios lp ON plpd.idLista = lp.idLista
+            INNER JOIN
+                AuditoriaListaDePrecios alp ON lp.idLista = alp.idLista
+            INNER JOIN
+                Usuario u ON alp.idUsuario = u.idUsuario
+            WHERE
+                YEAR(lp.fechaVigencia) = YEAR(GETDATE())
+                AND MONTH(lp.fechaVigencia) = :month
+                AND lp.idLista IN (
+                    SELECT DISTINCT alp.idLista
+                    FROM AuditoriaListaDePrecios alp
+                    INNER JOIN Usuario u ON alp.idUsuario = u.idUsuario
+                    WHERE
+                        YEAR(alp.fechaVigencia) = YEAR(GETDATE())
+                        AND MONTH(alp.fechaVigencia) = :month
+                        AND u.nombreUsuario = :nombreUsuario
+                )
+                AND p.nombre = :productName
+            ORDER BY
+                nombreProducto ASC;
+        `, {
+            replacements: { nombreUsuario: username, month: +month, productName: productName },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        const groupedProducts = productsPrice.reduce((acc, product) => {
+            const key = product.nombreProducto;
+            if (!acc[key]) {
+                acc[key] = [];
+            }
+            acc[key].push(product);
+            return acc;
+        }, {});
+
+        // Ordenar por nombre del producto
+        const sortedProducts = Object.keys(groupedProducts).map((key) => ({
+            nombreProducto: key,
+            data: groupedProducts[key],
+        }));
+
+        res.json({
+            productsPrice: sortedProducts
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Hable con el administrador'
+        });
+    }
+};
+
 module.exports = {
     getLoginUser,
     getTurnoverUser,
     getRecommendedReports,
-    getOrdersChangeState
+    getOrdersChangeState,
+    getProductPriceAudit
 };

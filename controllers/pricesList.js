@@ -79,7 +79,7 @@ const newList = async (req, res = response) => {
                 type: Sequelize.QueryTypes.SELECT,
             });     
 
-            for (productToDelete of productsByListId){
+            /*for (productToDelete of productsByListId){
                 const deleteProductsByList = await db.query(`
                     delete from Producto_ListaDePrecio where idProducto = :id
                 `, {
@@ -93,7 +93,7 @@ const newList = async (req, res = response) => {
                     replacements: { id: productToDelete.idProducto,  },
                     type: Sequelize.QueryTypes.DELETE,
                 }); 
-            }
+            }*/
         }
 
         for (const producto of productos) {
@@ -113,7 +113,7 @@ const newList = async (req, res = response) => {
                 });
             }
 
-            if (!existingProduct) {
+            //if (!existingProduct) {
                 existingProduct = await Producto.create({
                     nombre: producto.nombreProducto,
                     marca: producto.marca,
@@ -126,7 +126,7 @@ const newList = async (req, res = response) => {
                     idProducto: existingProduct.idProducto,
                     precioUnitario: producto.precio
                 });
-            }
+            //}
         }   
 
         const insert = await AuditoriaListaDePrecios.create({
