@@ -271,6 +271,89 @@ const AuditoriaRecomendados = db.define('AuditoriaRecomendados', {
 AuditoriaRecomendados.belongsTo(Cliente, { foreignKey: 'idCliente' });
 AuditoriaRecomendados.belongsTo(Usuario, { foreignKey: 'idUsuario' });
 
+const AuditoriaCambioEstadoPedido = db.define('AuditoriaCambioEstadoPedido', {
+    idAuditoria: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+    idPedido: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Pedido',
+            key: 'idPedido',
+        },
+    },
+    fechaCreacion: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+    estado: {
+        type: DataTypes.STRING,
+        allowNull: false,
+    }
+}, {
+    tableName: 'AuditoriaCambioEstadoPedido',
+    timestamps: false,
+});
+
+AuditoriaCambioEstadoPedido.belongsTo(Pedido, { foreignKey: 'idPedido' });
+AuditoriaCambioEstadoPedido.belongsTo(Usuario, { foreignKey: 'idUsuario' });
+
+const AuditoriaListaDePrecios = db.define('AuditoriaListaDePrecios', {
+    idAuditoria: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    idLista: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'ListaDePrecios',
+            key: 'idLista',
+        },
+    },
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+    nombre: {
+        type: DataTypes.STRING,
+        allowNull: false,
+        references: {
+            model: 'ListaDePrecios',
+            key: 'nombre',
+        },
+    },
+    fechaVigencia: {
+        type: DataTypes.DATE,
+        allowNull: false
+    },
+    fechaCreacion: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    }
+}, {
+    tableName: 'AuditoriaListaDePrecios',
+    timestamps: false,
+});
+
+AuditoriaListaDePrecios.belongsTo(ListaDePrecios, { foreignKey: 'idLista' });
+
 db.sync()
     .then(() => {
         console.log('Modelos Pedidos sincronizados con la base de datos.');
@@ -293,5 +376,7 @@ module.exports = {
     Producto_ListaDePrecio,
     Preventista_ListaDePrecio,
     ClienteUsuario,
-    AuditoriaRecomendados
+    AuditoriaRecomendados,
+    AuditoriaCambioEstadoPedido,
+    AuditoriaListaDePrecios
 };

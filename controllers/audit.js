@@ -123,8 +123,51 @@ const getRecommendedReports = async(req, res = response) => {
     }
 };
 
+const getOrdersChangeState = async(req, res = response) => {
+
+    const { username } = req.query
+
+    try {
+
+        const user = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        if (!user) {
+            return res.status(400).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        const changeStateAudit = await db.query(`
+            SELECT 
+                acp.fechaCreacion,
+                acp.estado,
+                p.fecha AS FechaPedido,
+                c.nombre AS NombreCliente,
+                c.direccion AS DireccionCliente
+            FROM AuditoriaCambioEstadoPedido acp
+            JOIN Pedido p ON acp.idPedido = p.idPedido
+            JOIN Cliente c ON p.idCliente = c.idCliente
+            WHERE acp.idUsuario = :idUsuario;
+        `, {
+            replacements: { idUsuario: user.idUsuario },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        res.json({
+            changeStateAudit
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Hable con el administrador'
+        });
+    }
+};
+
 module.exports = {
     getLoginUser,
     getTurnoverUser,
-    getRecommendedReports
+    getRecommendedReports,
+    getOrdersChangeState
 };

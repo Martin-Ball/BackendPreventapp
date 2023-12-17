@@ -1,5 +1,5 @@
 const { response, json } = require("express");
-const { ListaDePrecios, Producto_ListaDePrecio, Producto, Cantidad, Preventista_ListaDePrecio } = require('../models/tables-db');
+const { ListaDePrecios, Producto_ListaDePrecio, Producto, Cantidad, Preventista_ListaDePrecio, AuditoriaListaDePrecios } = require('../models/tables-db');
 const jwt = require('jsonwebtoken')
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
@@ -127,7 +127,15 @@ const newList = async (req, res = response) => {
                     precioUnitario: producto.precio
                 });
             }
-        }      
+        }   
+
+        const insert = await AuditoriaListaDePrecios.create({
+            idLista: createdList.idLista,
+            idUsuario: adminUser.idUsuario,
+            nombre: createdList.nombre,
+            fechaVigencia: createdList.fechaVigencia,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+        });
 
         res.json({
             msg: 'Lista de precios y productos agregados correctamente'

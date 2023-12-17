@@ -1,5 +1,5 @@
 const { response, json } = require("express");
-const { Cliente, LineaPedido, Producto, Pedido } = require('../models/tables-db');
+const { Cliente, LineaPedido, Producto, Pedido, AuditoriaCambioEstadoPedido } = require('../models/tables-db');
 const jwt = require('jsonwebtoken')
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
@@ -45,9 +45,14 @@ const newOrder = async (req, res = response) => {
                 cantidad: product.cantidad,
                 fecha: moment().local('es-AR').toDate()
             });  
-        
-            
         }    
+
+        const insert = await AuditoriaCambioEstadoPedido.create({
+            idUsuario: user.idUsuario,
+            idPedido: createdOrder.idPedido,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+            estado: createdOrder.estado
+        });
 
         res.json({
             msg: 'Pedido creado correctamente'
@@ -338,7 +343,7 @@ const getOrdersByDate = async (req, res = response) => {
 };
 
 const sendOrderToDelivery = async (req, res = response) => {
-    const { idOrder } = req.query;
+    const { idOrder, username } = req.query;
 
     try {
         const updateState = await db.query(`
@@ -346,6 +351,15 @@ const sendOrderToDelivery = async (req, res = response) => {
         `, {
             replacements: { id: idOrder },
             type: Sequelize.QueryTypes.UPDATE,
+        });
+
+        const userId = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        const insert = await AuditoriaCambioEstadoPedido.create({
+            idUsuario: userId.idUsuario,
+            idPedido: +idOrder,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+            estado: 'Enviado'
         });
 
         res.json('Pedido enviado!');
@@ -358,7 +372,7 @@ const sendOrderToDelivery = async (req, res = response) => {
 };
 
 const cancelOrder = async (req, res = response) => {
-    const { idOrder } = req.query;
+    const { idOrder, username } = req.query;
 
     try {
         const updateState = await db.query(`
@@ -366,6 +380,15 @@ const cancelOrder = async (req, res = response) => {
         `, {
             replacements: { id: idOrder },
             type: Sequelize.QueryTypes.UPDATE,
+        });
+
+        const userId = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        const insert = await AuditoriaCambioEstadoPedido.create({
+            idUsuario: userId.idUsuario,
+            idPedido: +idOrder,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+            estado: 'Cancelado'
         });
 
         res.json('Pedido cancelado');
@@ -378,7 +401,7 @@ const cancelOrder = async (req, res = response) => {
 };
 
 const orderDelivered = async (req, res = response) => {
-    const { idOrder } = req.query;
+    const { idOrder, username } = req.query;
 
     try {
         const updateState = await db.query(`
@@ -386,6 +409,15 @@ const orderDelivered = async (req, res = response) => {
         `, {
             replacements: { id: idOrder },
             type: Sequelize.QueryTypes.UPDATE,
+        });
+
+        const userId = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        const insert = await AuditoriaCambioEstadoPedido.create({
+            idUsuario: userId.idUsuario,
+            idPedido: +idOrder,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+            estado: 'Entregado'
         });
 
         res.json('Pedido entregado!');
@@ -398,7 +430,7 @@ const orderDelivered = async (req, res = response) => {
 };
 
 const notDeliverOrder = async (req, res = response) => {
-    const { idOrder } = req.query;
+    const { idOrder, username } = req.query;
 
     try {
         const updateState = await db.query(`
@@ -406,6 +438,15 @@ const notDeliverOrder = async (req, res = response) => {
         `, {
             replacements: { id: idOrder },
             type: Sequelize.QueryTypes.UPDATE,
+        });
+
+        const userId = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        const insert = await AuditoriaCambioEstadoPedido.create({
+            idUsuario: userId.idUsuario,
+            idPedido: +idOrder,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
+            estado: 'No entregado'
         });
 
         res.json('Pedido no enviado');
