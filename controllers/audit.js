@@ -84,7 +84,47 @@ const getTurnoverUser = async(req, res = response) => {
     }
 };
 
+const getRecommendedReports = async(req, res = response) => {
+
+    const { username } = req.query
+
+    try {
+
+        const user = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        if (!user) {
+            return res.status(400).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        const recommendedReports = await db.query(`
+            SELECT 
+                ar.fechaCreacion,
+                c.nombre AS NombreCliente,
+                c.direccion AS DireccionCliente
+            FROM AuditoriaRecomendados ar
+            JOIN Cliente c ON ar.idCliente = c.idCliente
+            WHERE ar.idUsuario = :idUsuario;
+        `, {
+            replacements: { idUsuario: user.idUsuario },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        res.json({
+            recommendedReports
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Hable con el administrador'
+        });
+    }
+};
+
 module.exports = {
     getLoginUser,
-    getTurnoverUser
+    getTurnoverUser,
+    getRecommendedReports
 };

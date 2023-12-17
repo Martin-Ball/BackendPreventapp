@@ -237,6 +237,40 @@ const Producto_ListaDePrecio = db.define('Producto_ListaDePrecio', {
 Producto_ListaDePrecio.belongsTo(ListaDePrecios, { foreignKey: 'idLista' });
 Producto_ListaDePrecio.belongsTo(Producto, { foreignKey: 'idProducto' });
 
+const AuditoriaRecomendados = db.define('AuditoriaRecomendados', {
+    idAuditoria: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    idUsuario: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Usuario',
+            key: 'idUsuario',
+        },
+    },
+    idCliente: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Cliente',
+            key: 'idCliente',
+        },
+    },
+    fechaCreacion: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    },
+}, {
+    tableName: 'AuditoriaRecomendados',
+    timestamps: false,
+});
+
+AuditoriaRecomendados.belongsTo(Cliente, { foreignKey: 'idCliente' });
+AuditoriaRecomendados.belongsTo(Usuario, { foreignKey: 'idUsuario' });
+
 db.sync()
     .then(() => {
         console.log('Modelos Pedidos sincronizados con la base de datos.');
@@ -258,5 +292,6 @@ module.exports = {
     LineaPedido,
     Producto_ListaDePrecio,
     Preventista_ListaDePrecio,
-    ClienteUsuario
+    ClienteUsuario,
+    AuditoriaRecomendados
 };

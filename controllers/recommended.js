@@ -2,6 +2,8 @@ const { response } = require("express");
 const jwt = require('jsonwebtoken')
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
+const { AuditoriaRecomendados, Cliente } = require('../models/tables-db');
+const { Usuario } = require("../models/security-module");
 
 const getRecommendedProducts = async (req, res = response) => {
     const { client, username } = req.query;
@@ -39,6 +41,15 @@ const getRecommendedProducts = async (req, res = response) => {
         `, {
             replacements: { clientName: client, username: username },
             type: Sequelize.QueryTypes.SELECT,
+        });
+
+        const clientId = await Cliente.findOne({ where: { nombre: client } });
+        const userId = await Usuario.findOne({ where: { nombreUsuario: username } });
+
+        const insert = await AuditoriaRecomendados.create({
+            idCliente: clientId.idCliente,
+            idUsuario: userId.idUsuario,
+            fechaCreacion: Sequelize.literal('GETDATE()'),
         });
 
         if (productsRecommended.length === 0) {
