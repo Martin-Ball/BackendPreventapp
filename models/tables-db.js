@@ -354,6 +354,31 @@ const AuditoriaListaDePrecios = db.define('AuditoriaListaDePrecios', {
 
 AuditoriaListaDePrecios.belongsTo(ListaDePrecios, { foreignKey: 'idLista' });
 
+const AuditoriaCliente = db.define('AuditoriaCliente', {
+    idAuditoria: {
+        type: DataTypes.INTEGER,
+        primaryKey: true,
+        autoIncrement: true,
+    },
+    idCliente: {
+        type: DataTypes.INTEGER,
+        allowNull: false,
+        references: {
+            model: 'Cliente',
+            key: 'idCliente',
+        },
+    },
+    fechaCreacion: {
+        type: DataTypes.DATE,
+        allowNull: false,
+    }
+}, {
+    tableName: 'AuditoriaCliente',
+    timestamps: false,
+});
+
+AuditoriaCliente.belongsTo(Cliente, { foreignKey: 'idCliente' });
+
 db.sync()
     .then(() => {
         console.log('Modelos Pedidos sincronizados con la base de datos.');
@@ -378,5 +403,6 @@ module.exports = {
     ClienteUsuario,
     AuditoriaRecomendados,
     AuditoriaCambioEstadoPedido,
-    AuditoriaListaDePrecios
+    AuditoriaListaDePrecios,
+    AuditoriaCliente
 };

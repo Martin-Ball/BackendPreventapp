@@ -290,11 +290,53 @@ const getClientPurchasesAudit = async(req, res = response) => {
     }
 };
 
+const getClientCreationAudit = async(req, res = response) => {
+
+    const { clientName } = req.query
+
+    try {
+
+        const user = await Cliente.findOne({ where: { nombre: clientName } });
+
+        if (!user) {
+            return res.status(400).json({
+                msg: 'Usuario no encontrado'
+            });
+        }
+
+        const creationClient = await db.query(`
+            SELECT
+                c.nombre AS nombreCliente,
+                ac.fechaCreacion
+            FROM
+                AuditoriaCliente ac
+            INNER JOIN
+                Cliente c ON ac.idCliente = c.idCliente
+            WHERE
+                c.nombre = :clientName;
+        `, {
+            replacements: { clientName: clientName },
+            type: Sequelize.QueryTypes.SELECT,
+        });
+
+        res.json({
+            creationDate: creationClient[0].fechaCreacion
+        });
+
+    } catch (error) {
+        console.log(error);
+        return res.status(500).json({
+            msg: 'Hable con el administrador'
+        });
+    }
+};
+
 module.exports = {
     getLoginUser,
     getTurnoverUser,
     getRecommendedReports,
     getOrdersChangeState,
     getProductPriceAudit,
-    getClientPurchasesAudit
+    getClientPurchasesAudit,
+    getClientCreationAudit
 };

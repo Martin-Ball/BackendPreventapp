@@ -1,5 +1,5 @@
 const { response, json } = require("express");
-const { Cliente, ClienteUsuario } = require('../models/tables-db');
+const { Cliente, ClienteUsuario, AuditoriaCliente } = require('../models/tables-db');
 const { Usuario } = require('../models/security-module');
 const { db } = require('../database/connection')
 const { Sequelize} = require('sequelize');
@@ -40,6 +40,11 @@ const newClientList = async (req, res = response) => {
                     nombre: nombre,
                     direccion: direccion,
                     horarioEntrega: horarioEntrega
+                });
+
+                const insert = await AuditoriaCliente.create({
+                    idCliente: newClient.idCliente,
+                    fechaCreacion: Sequelize.literal('GETDATE()'),
                 });
     
                 for (user of usersByAdmin){
