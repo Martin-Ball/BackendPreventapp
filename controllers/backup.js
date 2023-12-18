@@ -123,7 +123,7 @@ const executeRestore = (res, connection, timeout) => {
 
       connection.close();
 
-      res.json({ message: 'Restauración completada con éxito' });
+      res.status(200).json({ message: 'Restauración completada con éxito' });
     }
   });
 
