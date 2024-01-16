@@ -84,7 +84,7 @@ const getNewOrders = async (req, res = response) => {
         
             newOrders = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
-                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega, c.lat, c.long
                 FROM Pedido p
                 JOIN Cliente c ON p.idCliente = c.idCliente
                 WHERE p.preventista_email IN (
@@ -113,7 +113,7 @@ const getNewOrders = async (req, res = response) => {
         }else{
             newOrders = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
-                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega, c.lat, c.long
                 FROM Pedido p
                 JOIN Cliente c ON p.idCliente = c.idCliente
                 WHERE p.preventista_email IN (
@@ -164,6 +164,8 @@ const getNewOrders = async (req, res = response) => {
                     nombre: order.nombreCliente,
                     direccion: order.direccion,
                     horarioEntrega: order.horarioEntrega,
+                    lat: order.lat,
+                    long: order.long
                 },
                 preventista: order.preventista_email,
                 nota: order.nota,
@@ -317,6 +319,8 @@ const getOrdersByDate = async (req, res = response) => {
                     nombre: order.nombreCliente,
                     direccion: order.direccion,
                     horarioEntrega: order.horarioEntrega,
+                    lat: order.lat,
+                    long: order.long
                 },
                 preventista: order.preventista_email,
                 nota: order.nota,
