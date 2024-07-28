@@ -59,7 +59,7 @@ const login = async(req, res = response) => {
 
         const logins = await LoginUsuarioAuditoria.create({
             idUsuario: user.idUsuario,
-            fechaInicioSesion: Sequelize.literal('GETDATE()'),
+            fechaInicioSesion: Sequelize.literal('NOW()'),
         });
 
         res.json({

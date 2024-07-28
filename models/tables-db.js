@@ -131,6 +131,8 @@ const ListaDePrecios = db.define('ListaDePrecios', {
     },
     nombre: {
         type: DataTypes.STRING,
+        allowNull: false,
+        unique: true
     },
     fechaVigencia: {
         type: DataTypes.DATE,

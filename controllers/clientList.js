@@ -44,7 +44,7 @@ const newClientList = async (req, res = response) => {
 
                 const insert = await AuditoriaCliente.create({
                     idCliente: newClient.idCliente,
-                    fechaCreacion: Sequelize.literal('GETDATE()'),
+                    fechaCreacion: Sequelize.literal('NOW()'),
                 });
     
                 for (user of usersByAdmin){

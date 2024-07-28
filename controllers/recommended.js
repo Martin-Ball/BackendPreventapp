@@ -49,7 +49,7 @@ const getRecommendedProducts = async (req, res = response) => {
         const insert = await AuditoriaRecomendados.create({
             idCliente: clientId.idCliente,
             idUsuario: userId.idUsuario,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
         });
 
         if (productsRecommended.length === 0) {

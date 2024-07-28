@@ -63,7 +63,7 @@ const getTurnoverUser = async(req, res = response) => {
             SELECT MONTH(p.fecha) AS Mes, SUM(lp.cantidad * lp.precio) AS VolumenVentas
             FROM Pedido p
             JOIN LineaPedido lp ON p.idPedido = lp.idPedido
-            WHERE YEAR(p.fecha) = YEAR(GETDATE()) 
+            WHERE YEAR(p.fecha) = YEAR(NOW()) 
             AND p.preventista_email IN (SELECT nombreUsuario FROM Usuario WHERE idUsuario = :idUsuario)
             GROUP BY MONTH(p.fecha)
             ORDER BY Mes;
@@ -197,14 +197,14 @@ const getProductPriceAudit = async(req, res = response) => {
             INNER JOIN
                 Usuario u ON alp.idUsuario = u.idUsuario
             WHERE
-                YEAR(lp.fechaVigencia) = YEAR(GETDATE())
+                YEAR(lp.fechaVigencia) = YEAR(NOW())
                 AND MONTH(lp.fechaVigencia) = :month
                 AND lp.idLista IN (
                     SELECT DISTINCT alp.idLista
                     FROM AuditoriaListaDePrecios alp
                     INNER JOIN Usuario u ON alp.idUsuario = u.idUsuario
                     WHERE
-                        YEAR(alp.fechaVigencia) = YEAR(GETDATE())
+                        YEAR(alp.fechaVigencia) = YEAR(NOW())
                         AND MONTH(alp.fechaVigencia) = :month
                         AND u.nombreUsuario = :nombreUsuario
                 )

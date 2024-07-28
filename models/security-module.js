@@ -97,9 +97,9 @@ Usuario.belongsToMany(Usuario, { through: UsuarioAdmin, foreignKey: 'idUsuario',
 
 const LoginUsuarioAuditoria = db.define('LoginUsuarioAuditoria', {
     idAuditoria: {
+        autoIncrement: true,
         type: DataTypes.INTEGER,
         primaryKey: true,
-        autoIncrement: true,
     },
     idUsuario: {
         type: DataTypes.INTEGER,

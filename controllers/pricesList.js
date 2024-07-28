@@ -134,7 +134,7 @@ const newList = async (req, res = response) => {
             idUsuario: adminUser.idUsuario,
             nombre: createdList.nombre,
             fechaVigencia: createdList.fechaVigencia,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
         });
 
         res.json({

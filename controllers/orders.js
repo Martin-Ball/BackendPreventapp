@@ -50,7 +50,7 @@ const newOrder = async (req, res = response) => {
         const insert = await AuditoriaCambioEstadoPedido.create({
             idUsuario: user.idUsuario,
             idPedido: createdOrder.idPedido,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
             estado: createdOrder.estado
         });
 
@@ -358,7 +358,7 @@ const sendOrderToDelivery = async (req, res = response) => {
         const insert = await AuditoriaCambioEstadoPedido.create({
             idUsuario: userId.idUsuario,
             idPedido: +idOrder,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
             estado: 'Enviado'
         });
 
@@ -387,7 +387,7 @@ const cancelOrder = async (req, res = response) => {
         const insert = await AuditoriaCambioEstadoPedido.create({
             idUsuario: userId.idUsuario,
             idPedido: +idOrder,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
             estado: 'Cancelado'
         });
 
@@ -416,7 +416,7 @@ const orderDelivered = async (req, res = response) => {
         const insert = await AuditoriaCambioEstadoPedido.create({
             idUsuario: userId.idUsuario,
             idPedido: +idOrder,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
             estado: 'Entregado'
         });
 
@@ -445,7 +445,7 @@ const notDeliverOrder = async (req, res = response) => {
         const insert = await AuditoriaCambioEstadoPedido.create({
             idUsuario: userId.idUsuario,
             idPedido: +idOrder,
-            fechaCreacion: Sequelize.literal('GETDATE()'),
+            fechaCreacion: Sequelize.literal('NOW()'),
             estado: 'No entregado'
         });
 
