@@ -37,14 +37,20 @@ const newOrder = async (req, res = response) => {
             const productFound = await Producto.findOne({
                 where: { nombre: product.nombreProducto }
             });
-        
-            const orderLine = await LineaPedido.create({
-                idPedido: createdOrder.idPedido,
-                idProducto: productFound.idProducto,
-                precio: product.precio,
-                cantidad: product.cantidad,
-                fecha: moment().local('es-AR').toDate()
-            });  
+
+            const foundOrderLine = await LineaPedido.findOne({
+                where: { idPedido: createdOrder.idPedido, idProducto: productFound.idProducto}
+            })
+
+            if(!foundOrderLine) {
+                const orderLine = await LineaPedido.create({
+                    idPedido: createdOrder.idPedido,
+                    idProducto: productFound.idProducto,
+                    precio: product.precio,
+                    cantidad: product.cantidad,
+                    fecha: moment().local('es-AR').toDate()
+                });   
+            }  
         }    
 
         const insert = await AuditoriaCambioEstadoPedido.create({
@@ -242,7 +248,7 @@ const getOrdersByDate = async (req, res = response) => {
 
             ordersByDate = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
-                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega, c.lat, c.long
                 FROM Pedido p
                 JOIN Cliente c ON p.idCliente = c.idCliente
                 WHERE p.preventista_email IN (
@@ -273,7 +279,7 @@ const getOrdersByDate = async (req, res = response) => {
         }else{ //Seller
             ordersByDate = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
-                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega, c.lat, c.long
                 FROM Pedido p
                 JOIN Cliente c ON p.idCliente = c.idCliente
                 WHERE p.preventista_email IN (
