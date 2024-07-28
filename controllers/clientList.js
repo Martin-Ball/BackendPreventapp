@@ -33,13 +33,15 @@ const newClientList = async (req, res = response) => {
         }
 
         for (const client of clientes) {
-            const { nombre, direccion, horarioEntrega } = client;
+            const { nombre, direccion, horarioEntrega, lat, long } = client;
 
         
                 const newClient = await Cliente.create({
                     nombre: nombre,
                     direccion: direccion,
-                    horarioEntrega: horarioEntrega
+                    horarioEntrega: horarioEntrega,
+                    lat: lat,
+                    long: long
                 });
 
                 const insert = await AuditoriaCliente.create({
@@ -106,7 +108,9 @@ const getListClients = async (req, res = response) => {
                     idCliente: clientFound.idCliente,
                     nombre: clientFound.nombre,
                     direccion: clientFound.direccion,
-                    horarioEntrega: clientFound.horarioEntrega
+                    horarioEntrega: clientFound.horarioEntrega,
+                    lat: clientFound.lat,
+                    long: clientFound.long
                 });
             }
         }

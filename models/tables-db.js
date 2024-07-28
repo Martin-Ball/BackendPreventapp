@@ -60,6 +60,12 @@ const Cliente = db.define('Cliente', {
     horarioEntrega: {
         type: DataTypes.STRING,
     },
+    lat: {
+        type: DataTypes.STRING,
+    },
+    long: {
+        type: DataTypes.STRING,
+    },
 }, {
     tableName: 'Cliente',
     timestamps: false,
