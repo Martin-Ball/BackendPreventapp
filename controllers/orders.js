@@ -198,14 +198,16 @@ const getNewOrders = async (req, res = response) => {
 };
 
 const getOrdersByDate = async (req, res = response) => {
-    const { usuario, fecha, groupType } = req.query;
+    let { usuario, fecha, groupType } = req.query;
+
+    fecha = moment(fecha, 'YYYY-M-D').format('YYYY-MM-DD HH:mm:ss');
 
     try {
         let ordersByDate
         if(groupType == 1){ //Admin
             ordersByDate = await db.query(`
                 SELECT p.idPedido, p.preventista_email, p.nota, p.fecha, p.estado,
-                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega
+                    c.nombre AS nombreCliente, c.idCliente, c.direccion, c.horarioEntrega, c.lat, c.long
                 FROM Pedido p
                 JOIN Cliente c ON p.idCliente = c.idCliente
                 WHERE p.preventista_email IN (
@@ -227,7 +229,7 @@ const getOrdersByDate = async (req, res = response) => {
                         )
                     )
                 )
-                AND p.fecha = :fecha;
+                AND DATE(p.fecha) = :fecha;
             `, {
                 replacements: { usernameAdmin: usuario, fecha: fecha },
                 type: Sequelize.QueryTypes.SELECT,
@@ -270,7 +272,7 @@ const getOrdersByDate = async (req, res = response) => {
                         )
                     )
                 )
-                AND p.fecha = :fecha
+                AND DATE(p.fecha) = :fecha
                 AND p.estado IN ('Entregado', 'No entregado', 'Enviado');
             `, {
                 replacements: { userAdmin: userAdminName, fecha: fecha },
@@ -296,7 +298,7 @@ const getOrdersByDate = async (req, res = response) => {
                         )
                     )
                 )
-                AND p.fecha = :fecha;
+                AND DATE(p.fecha) = :fecha;
             `, {
                 replacements: { usernameSeller: usuario, fecha: fecha },
                 type: Sequelize.QueryTypes.SELECT,
