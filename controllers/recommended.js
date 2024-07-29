@@ -25,11 +25,6 @@ const getRecommendedProducts = async (req, res = response) => {
                 JOIN Producto_ListaDePrecio pl ON p.idProducto = pl.idProducto
             WHERE
                 c.nombre = :clientName
-                AND pl.idLista = (
-                    SELECT idLista
-                    FROM Preventista_ListaDePrecio
-                    WHERE email = :username
-                )
             GROUP BY
                 p.idProducto,
                 p.nombre,
